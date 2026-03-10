@@ -135,6 +135,9 @@
       "files": [
         "*.json"
       ],
+      "excludedFiles": [
+        "electron-builder.json"
+      ],
       "parser": "jsonc-eslint-parser",
       "plugins": [
         "jsonc",
@@ -149,12 +152,35 @@
           "error",
           "consistent"
         ],
+        "prettier/prettier": "off",
+        "json-schema-validator/no-invalid": "error"
+      }
+    },
+    {
+      "files": [
+        "electron-builder.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "extends": [
+        "plugin:jsonc/recommended-with-json"
+      ],
+      "plugins": [
+        "jsonc"
+      ],
+      "rules": {
+        "jsonc/array-element-newline": [
+          "error",
+          "consistent"
+        ],
+        "jsonc/array-bracket-newline": [
+          "error",
+          "consistent"
+        ],
         "jsonc/indent": [
           "error",
           2
         ],
-        "prettier/prettier": "off",
-        "json-schema-validator/no-invalid": "error"
+        "prettier/prettier": "off"
       }
     }
   ]
