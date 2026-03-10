@@ -96,6 +96,7 @@ const config: webpack.Configuration[] = [
       ]
     },
     externals: {
+      electron: 'require("electron")',
       'color-convert': 'require("../node_modules/color-convert/index.js")',
       'color-string': 'require("../node_modules/color-string/index.js")',
       columnify: 'require("../node_modules/columnify/columnify.js")',

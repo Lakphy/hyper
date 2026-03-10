@@ -11,6 +11,10 @@ if (['--help', '-v', '--version'].includes(process.argv[1])) {
   process.exit();
 }
 
+// Set process.mainModule for @electron/remote's require resolution (removed in Electron >= 28)
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+process.mainModule = module;
+
 // Enable remote module
 // eslint-disable-next-line import/order
 import {initialize as remoteInitialize} from '@electron/remote/main';

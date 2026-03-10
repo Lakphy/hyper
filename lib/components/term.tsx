@@ -90,7 +90,8 @@ const getTermOptions = (props: TermProps): ITerminalOptions => {
       brightWhite: props.colors.lightWhite
     },
     screenReaderMode: props.screenReaderMode,
-    overviewRuler: {width: 20}
+    overviewRuler: {width: 20},
+    allowProposedApi: true
   };
 };
 
