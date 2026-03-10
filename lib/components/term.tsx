@@ -1,20 +1,19 @@
 import {clipboard, shell} from 'electron';
 import React from 'react';
 
+import {FitAddon} from '@xterm/addon-fit';
+import {ImageAddon} from '@xterm/addon-image';
+import {LigaturesAddon} from '@xterm/addon-ligatures';
+import {SearchAddon} from '@xterm/addon-search';
+import type {ISearchDecorationOptions} from '@xterm/addon-search';
+import {Unicode11Addon} from '@xterm/addon-unicode11';
+import {WebLinksAddon} from '@xterm/addon-web-links';
+import {WebglAddon} from '@xterm/addon-webgl';
+import {Terminal} from '@xterm/xterm';
+import type {ITerminalOptions, IDisposable} from '@xterm/xterm';
 import Color from 'color';
 import isEqual from 'lodash/isEqual';
 import pickBy from 'lodash/pickBy';
-import {Terminal} from 'xterm';
-import type {ITerminalOptions, IDisposable} from 'xterm';
-import {CanvasAddon} from 'xterm-addon-canvas';
-import {FitAddon} from 'xterm-addon-fit';
-import {ImageAddon} from 'xterm-addon-image';
-import {LigaturesAddon} from 'xterm-addon-ligatures';
-import {SearchAddon} from 'xterm-addon-search';
-import type {ISearchDecorationOptions} from 'xterm-addon-search';
-import {Unicode11Addon} from 'xterm-addon-unicode11';
-import {WebLinksAddon} from 'xterm-addon-web-links';
-import {WebglAddon} from 'xterm-addon-webgl';
 
 import type {TermProps} from '../../typings/hyper';
 import terms from '../terms';
@@ -23,7 +22,7 @@ import {decorate} from '../utils/plugins';
 
 import _SearchBox from './searchBox';
 
-import 'xterm/css/xterm.css';
+import '@xterm/xterm/css/xterm.css';
 
 const SearchBox = decorate(_SearchBox, 'SearchBox');
 
@@ -66,7 +65,6 @@ const getTermOptions = (props: TermProps): ITerminalOptions => {
     letterSpacing: props.letterSpacing,
     allowTransparency: needTransparency,
     macOptionClickForcesSelection: props.macOptionSelectionMode === 'force',
-    windowsMode: isWindows,
     ...(isWindows && props.windowsPty && {windowsPty: props.windowsPty}),
     theme: {
       foreground: props.foregroundColor,
@@ -92,8 +90,7 @@ const getTermOptions = (props: TermProps): ITerminalOptions => {
       brightWhite: props.colors.lightWhite
     },
     screenReaderMode: props.screenReaderMode,
-    overviewRulerWidth: 20,
-    allowProposedApi: true
+    overviewRuler: {width: 20}
   };
 };
 
@@ -193,17 +190,17 @@ export default class Term extends React.PureComponent<
         if (needTransparency) {
           console.warn(
             'WebGL Renderer has been disabled since it does not support transparent backgrounds yet. ' +
-              'Falling back to canvas-based rendering.'
+              'Falling back to DOM-based rendering.'
           );
         } else if (!isWebgl2Supported()) {
-          console.warn('WebGL2 is not supported on your machine. Falling back to canvas-based rendering.');
+          console.warn('WebGL2 is not supported on your machine. Falling back to DOM-based rendering.');
         } else {
           // Experimental WebGL renderer needs some more glue-code to make it work on Hyper.
           // If you're working on enabling back WebGL, you will also need to look into `xterm-addon-ligatures` support for that renderer.
           useWebGL = true;
         }
       }
-      Term.reportRenderer(props.uid, useWebGL ? 'WebGL' : 'Canvas');
+      Term.reportRenderer(props.uid, useWebGL ? 'WebGL' : 'DOM');
 
       const shallActivateWebLink = (event: MouseEvent): boolean => {
         if (!event) return false;
@@ -225,12 +222,9 @@ export default class Term extends React.PureComponent<
         const webglAddon = new WebglAddon();
         this.term.loadAddon(webglAddon);
         webglAddon.onContextLoss(() => {
-          console.warn('WebGL context lost. Falling back to canvas-based rendering.');
+          console.warn('WebGL context lost. Falling back to DOM-based rendering.');
           webglAddon.dispose();
-          this.term.loadAddon(new CanvasAddon());
         });
-      } else {
-        this.term.loadAddon(new CanvasAddon());
       }
 
       if (props.disableLigatures !== true && !useWebGL) {

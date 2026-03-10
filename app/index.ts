@@ -89,129 +89,129 @@ async function installDevExtensions(isDev_: boolean) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-app.on('ready', () =>
-  installDevExtensions(isDev)
-    .then(() => {
-      function createWindow(
-        fn?: (win: BrowserWindow) => void,
-        options: {size?: [number, number]; position?: [number, number]} = {},
-        profileName: string = config.getDefaultProfile()
-      ) {
-        const cfg = plugins.getDecoratedConfig(profileName);
+app.on('ready', async () => {
+  try {
+    await installDevExtensions(isDev);
+  } catch (err) {
+    console.error('Error while loading devtools extensions', err);
+  }
 
-        const winSet = config.getWin();
-        let [startX, startY] = winSet.position;
+  function createWindow(
+    fn?: (win: BrowserWindow) => void,
+    options: {size?: [number, number]; position?: [number, number]} = {},
+    profileName: string = config.getDefaultProfile()
+  ) {
+    const cfg = plugins.getDecoratedConfig(profileName);
 
-        const [width, height] = options.size ? options.size : cfg.windowSize || winSet.size;
+    const winSet = config.getWin();
+    let [startX, startY] = winSet.position;
 
-        const winPos = options.position;
+    const [width, height] = options.size ? options.size : cfg.windowSize || winSet.size;
 
-        // Open the new window roughly the height of the header away from the
-        // previous window. This also ensures in multi monitor setups that the
-        // new terminal is on the correct screen.
-        const focusedWindow = BrowserWindow.getFocusedWindow() || app.getLastFocusedWindow();
-        // In case of options defaults position and size, we should ignore the focusedWindow.
-        if (winPos !== undefined) {
-          [startX, startY] = winPos;
-        } else if (focusedWindow) {
-          const points = focusedWindow.getPosition();
-          const currentScreen = screen.getDisplayNearestPoint({
-            x: points[0],
-            y: points[1]
-          });
+    const winPos = options.position;
 
-          const biggestX = points[0] + 100 + width - currentScreen.bounds.x;
-          const biggestY = points[1] + 100 + height - currentScreen.bounds.y;
+    // Open the new window roughly the height of the header away from the
+    // previous window. This also ensures in multi monitor setups that the
+    // new terminal is on the correct screen.
+    const focusedWindow = BrowserWindow.getFocusedWindow() || app.getLastFocusedWindow();
+    // In case of options defaults position and size, we should ignore the focusedWindow.
+    if (winPos !== undefined) {
+      [startX, startY] = winPos;
+    } else if (focusedWindow) {
+      const points = focusedWindow.getPosition();
+      const currentScreen = screen.getDisplayNearestPoint({
+        x: points[0],
+        y: points[1]
+      });
 
-          if (biggestX > currentScreen.size.width) {
-            startX = 50;
-          } else {
-            startX = points[0] + 34;
-          }
-          if (biggestY > currentScreen.size.height) {
-            startY = 50;
-          } else {
-            startY = points[1] + 34;
-          }
-        }
+      const biggestX = points[0] + 100 + width - currentScreen.bounds.x;
+      const biggestY = points[1] + 100 + height - currentScreen.bounds.y;
 
-        if (!windowUtils.positionIsValid([startX, startY])) {
-          [startX, startY] = config.windowDefaults.windowPosition;
-        }
-
-        const hwin = newWindow({width, height, x: startX, y: startY}, cfg, fn, profileName);
-        windowSet.add(hwin);
-        void hwin.loadURL(url);
-
-        // the window can be closed by the browser process itself
-        hwin.on('close', () => {
-          hwin.clean();
-          windowSet.delete(hwin);
-        });
-
-        return hwin;
+      if (biggestX > currentScreen.size.width) {
+        startX = 50;
+      } else {
+        startX = points[0] + 34;
       }
+      if (biggestY > currentScreen.size.height) {
+        startY = 50;
+      } else {
+        startY = points[1] + 34;
+      }
+    }
 
-      // when opening create a new window
+    if (!windowUtils.positionIsValid([startX, startY])) {
+      [startX, startY] = config.windowDefaults.windowPosition;
+    }
+
+    const hwin = newWindow({width, height, x: startX, y: startY}, cfg, fn, profileName);
+    windowSet.add(hwin);
+    void hwin.loadURL(url);
+
+    // the window can be closed by the browser process itself
+    hwin.on('close', () => {
+      hwin.clean();
+      windowSet.delete(hwin);
+    });
+
+    return hwin;
+  }
+
+  // when opening create a new window
+  createWindow();
+
+  // expose to plugins
+  app.createWindow = createWindow;
+
+  // mac only. when the dock icon is clicked
+  // and we don't have any active windows open,
+  // we open one
+  app.on('activate', () => {
+    if (!windowSet.size) {
       createWindow();
+    }
+  });
 
-      // expose to plugins
-      app.createWindow = createWindow;
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
 
-      // mac only. when the dock icon is clicked
-      // and we don't have any active windows open,
-      // we open one
-      app.on('activate', () => {
-        if (!windowSet.size) {
-          createWindow();
+  const makeMenu = () => {
+    const menu = plugins.decorateMenu(AppMenu.createMenu(createWindow, plugins.getLoadedPluginVersions));
+
+    // If we're on Mac make a Dock Menu
+    if (process.platform === 'darwin') {
+      const dockMenu = Menu.buildFromTemplate([
+        {
+          label: 'New Window',
+          click() {
+            createWindow();
+          }
         }
-      });
+      ]);
+      app.dock?.setMenu(dockMenu);
+    }
 
-      app.on('window-all-closed', () => {
-        if (process.platform !== 'darwin') {
-          app.quit();
-        }
-      });
+    Menu.setApplicationMenu(AppMenu.buildMenu(menu));
+  };
 
-      const makeMenu = () => {
-        const menu = plugins.decorateMenu(AppMenu.createMenu(createWindow, plugins.getLoadedPluginVersions));
-
-        // If we're on Mac make a Dock Menu
-        if (process.platform === 'darwin') {
-          const dockMenu = Menu.buildFromTemplate([
-            {
-              label: 'New Window',
-              click() {
-                createWindow();
-              }
-            }
-          ]);
-          app.dock.setMenu(dockMenu);
-        }
-
-        Menu.setApplicationMenu(AppMenu.buildMenu(menu));
-      };
-
-      plugins.onApp(app);
-      makeMenu();
-      plugins.subscribe(plugins.onApp.bind(undefined, app));
-      config.subscribe(makeMenu);
-      if (!isDev) {
-        // check if should be set/removed as default ssh protocol client
-        if (config.getConfig().defaultSSHApp && !app.isDefaultProtocolClient('ssh')) {
-          console.log('Setting Hyper as default client for ssh:// protocol');
-          app.setAsDefaultProtocolClient('ssh');
-        } else if (!config.getConfig().defaultSSHApp && app.isDefaultProtocolClient('ssh')) {
-          console.log('Removing Hyper from default client for ssh:// protocol');
-          app.removeAsDefaultProtocolClient('ssh');
-        }
-        void installCLI(false);
-      }
-    })
-    .catch((err) => {
-      console.error('Error while loading devtools extensions', err);
-    })
-);
+  plugins.onApp(app);
+  makeMenu();
+  plugins.subscribe(plugins.onApp.bind(undefined, app));
+  config.subscribe(makeMenu);
+  if (!isDev) {
+    // check if should be set/removed as default ssh protocol client
+    if (config.getConfig().defaultSSHApp && !app.isDefaultProtocolClient('ssh')) {
+      console.log('Setting Hyper as default client for ssh:// protocol');
+      app.setAsDefaultProtocolClient('ssh');
+    } else if (!config.getConfig().defaultSSHApp && app.isDefaultProtocolClient('ssh')) {
+      console.log('Removing Hyper from default client for ssh:// protocol');
+      app.removeAsDefaultProtocolClient('ssh');
+    }
+    void installCLI(false);
+  }
+});
 
 /**
  * Get last focused BrowserWindow or create new if none and callback

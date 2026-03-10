@@ -69,6 +69,16 @@ export function newWindow(
   const rpc = createRPC(window);
   const sessions = new Map<string, Session>();
 
+  window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('Renderer failed to load', {errorCode, errorDescription, validatedURL});
+  });
+  window.webContents.on('render-process-gone', (_event, details) => {
+    console.error('Renderer process gone', details);
+  });
+  window.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    console.log('[renderer]', {level, message, line, sourceId});
+  });
+
   const updateBackgroundColor = () => {
     const cfg_ = app.plugins.getDecoratedConfig(profileName);
     window.setBackgroundColor(toElectronBackgroundColor(cfg_.backgroundColor || '#000'));

@@ -1,6 +1,8 @@
 // Packages
+import type {EventEmitter} from 'events';
+
 import electron, {app} from 'electron';
-import type {BrowserWindow, AutoUpdater} from 'electron';
+import type {AutoUpdater, BrowserWindow} from 'electron';
 
 import retry from 'async-retry';
 import ms from 'ms';
@@ -15,6 +17,7 @@ const {platform} = process;
 const isLinux = platform === 'linux';
 
 const autoUpdater: AutoUpdater = isLinux ? autoUpdaterLinux : electron.autoUpdater;
+const autoUpdaterEvents = autoUpdater as AutoUpdater & EventEmitter;
 
 const getDecoratedConfigWithRetry = async () => {
   return await retry(() => {
@@ -39,11 +42,13 @@ let canaryUpdates = false;
 
 const buildFeedUrl = (canary: boolean, currentVersion: string) => {
   const updatePrefix = canary ? 'releases-canary' : 'releases';
-  const archSuffix = process.arch === 'arm64' || app.runningUnderARM64Translation ? '_arm64' : '';
+  const archSuffix = process.arch === 'arm64' || app.runningUnderARM64Translation === true ? '_arm64' : '';
   return `https://${updatePrefix}.hyper.is/update/${isLinux ? 'deb' : platform}${archSuffix}/${currentVersion}`;
 };
 
 const isCanary = (updateChannel: string) => updateChannel === 'canary';
+
+type UpdateEventHandler = (releaseNotes: string, releaseName: string, date: Date, updateUrl?: string) => void;
 
 async function init() {
   autoUpdater.on('error', (err) => {
@@ -79,15 +84,15 @@ const updater = (win: BrowserWindow) => {
 
   const {rpc} = win;
 
-  const onupdate = (ev: Event, releaseNotes: string, releaseName: string, date: Date, updateUrl: string) => {
+  const onupdate: UpdateEventHandler = (releaseNotes, releaseName, date, updateUrl) => {
     const releaseUrl = updateUrl || `https://github.com/vercel/hyper/releases/tag/${releaseName}`;
     rpc.emit('update available', {releaseNotes, releaseName, releaseUrl, canInstall: !isLinux});
   };
 
   if (isLinux) {
-    autoUpdater.on('update-available', onupdate);
+    autoUpdaterEvents.on('update-available', onupdate);
   } else {
-    autoUpdater.on('update-downloaded', onupdate);
+    autoUpdaterEvents.on('update-downloaded', onupdate);
   }
 
   rpc.once('quit and install', () => {
@@ -110,9 +115,9 @@ const updater = (win: BrowserWindow) => {
 
   win.on('close', () => {
     if (isLinux) {
-      autoUpdater.removeListener('update-available', onupdate);
+      autoUpdaterEvents.removeListener('update-available', onupdate);
     } else {
-      autoUpdater.removeListener('update-downloaded', onupdate);
+      autoUpdaterEvents.removeListener('update-downloaded', onupdate);
     }
   });
 };

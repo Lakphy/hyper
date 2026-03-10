@@ -1,6 +1,6 @@
 // Packages
-import {app, dialog, Menu} from 'electron';
-import type {BrowserWindow} from 'electron';
+import {app, dialog, Menu, BrowserWindow} from 'electron';
+import type {BaseWindow} from 'electron';
 
 // Utilities
 import {execCommand} from '../commands';
@@ -21,6 +21,10 @@ const appName = app.name;
 const appVersion = app.getVersion();
 
 let menu_: Menu;
+
+const execBrowserCommand = (command: string, focusedWindow?: BrowserWindow | BaseWindow) => {
+  execCommand(command, focusedWindow instanceof BrowserWindow ? focusedWindow : undefined);
+};
 
 export const createMenu = (
   createWindow: (fn?: (win: BrowserWindow) => void, options?: Record<string, any>) => BrowserWindow,
@@ -62,16 +66,16 @@ export const createMenu = (
     });
   };
   const menu = [
-    ...(process.platform === 'darwin' ? [darwinMenu(commandKeys, execCommand, showAbout)] : []),
+    ...(process.platform === 'darwin' ? [darwinMenu(commandKeys, execBrowserCommand, showAbout)] : []),
     shellMenu(
       commandKeys,
-      execCommand,
+      execBrowserCommand,
       getConfig().profiles.map((p) => p.name)
     ),
-    editMenu(commandKeys, execCommand),
-    viewMenu(commandKeys, execCommand),
-    toolsMenu(commandKeys, execCommand),
-    windowMenu(commandKeys, execCommand),
+    editMenu(commandKeys, execBrowserCommand),
+    viewMenu(commandKeys, execBrowserCommand),
+    toolsMenu(commandKeys, execBrowserCommand),
+    windowMenu(commandKeys, execBrowserCommand),
     helpMenu(commandKeys, showAbout)
   ];
 

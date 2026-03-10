@@ -1,4 +1,5 @@
-import type {MenuItemConstructorOptions, BrowserWindow} from 'electron';
+import {BrowserWindow} from 'electron';
+import type {BaseWindow, MenuItemConstructorOptions} from 'electron';
 
 import {execCommand} from '../commands';
 import {getProfiles} from '../config';
@@ -15,6 +16,10 @@ const getCommandKeys = (keymaps: Record<string, string[]>): Record<string, strin
     });
   }, {});
 
+const execBrowserCommand = (command: string, focusedWindow?: BrowserWindow | BaseWindow) => {
+  execCommand(command, focusedWindow instanceof BrowserWindow ? focusedWindow : undefined);
+};
+
 // only display cut/copy when there's a cursor selection
 const filterCutCopy = (selection: string, menuItem: MenuItemConstructorOptions) => {
   if (/^cut$|^copy$/.test(menuItem.role!) && !selection) {
@@ -30,10 +35,10 @@ const contextMenuTemplate = (
   const commandKeys = getCommandKeys(getDecoratedKeymaps());
   const _shell = shellMenu(
     commandKeys,
-    execCommand,
+    execBrowserCommand,
     getProfiles().map((p) => p.name)
   ).submenu as MenuItemConstructorOptions[];
-  const _edit = editMenu(commandKeys, execCommand).submenu.filter(filterCutCopy.bind(null, selection));
+  const _edit = editMenu(commandKeys, execBrowserCommand).submenu.filter(filterCutCopy.bind(null, selection));
   return _edit
     .concat(separator, _shell)
     .filter((menuItem) => !Object.prototype.hasOwnProperty.call(menuItem, 'enabled') || menuItem.enabled);

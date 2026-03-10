@@ -464,12 +464,14 @@ export {toDependencies as _toDependencies};
 
 const ipcMain = _ipcMain as IpcMainWithCommands;
 
-ipcMain.handle('child_process.exec', (event, command, options) => {
-  return promisify(exec)(command, options);
+ipcMain.handle('child_process.exec', async (event, command, options) => {
+  const {stdout, stderr} = await promisify(exec)(command, {...options, encoding: 'utf8'});
+  return {stdout, stderr};
 });
 
-ipcMain.handle('child_process.execFile', (event, file, args, options) => {
-  return promisify(execFile)(file, args, options);
+ipcMain.handle('child_process.execFile', async (event, file, args, options) => {
+  const {stdout, stderr} = await promisify(execFile)(file, args, {...options, encoding: 'utf8'});
+  return {stdout, stderr};
 });
 
 ipcMain.handle('getLoadedPluginVersions', () => getLoadedPluginVersions());
