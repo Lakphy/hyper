@@ -31,7 +31,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - name: Fix node-gyp and Python
-        run: python3 -m pip install packaging setuptools
+        run: |
+          if command -v python3 >/dev/null 2>&1; then
+            python3 -m pip install --user packaging setuptools || python3 -m pip install --break-system-packages packaging setuptools
+          fi
       - name: Install
         run: pnpm install
         env:
@@ -66,8 +69,9 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       - name: Archive Build Artifacts
-        uses: LabhanshAgrawal/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: build-${{ runner.os }}
           path: |
             dist/*.dmg
             dist/*.snap
@@ -87,7 +91,7 @@ jobs:
         env:
           SHELL: /bin/bash
       - name: Archive E2E test screenshot
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: e2e
           path: dist/tmp/*.png
@@ -97,7 +101,7 @@ jobs:
           PR_NUM: ${{ github.event.number }}
         run: echo $PR_NUM > pr_num.txt
       - name: Upload the pr num
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: github.event_name == 'pull_request'
         with:
           name: pr_num
@@ -126,7 +130,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - name: Fix node-gyp and Python
-        run: python3 -m pip install packaging setuptools
+        run: |
+          if command -v python3 >/dev/null 2>&1; then
+            python3 -m pip install --user packaging setuptools || python3 -m pip install --break-system-packages packaging setuptools
+          fi
       - name: Install
         run: |
           pnpm install
@@ -164,8 +171,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Archive Build Artifacts
-        uses: LabhanshAgrawal/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: build-linux-${{ matrix.name }}
           path: |
             dist/*.snap
             dist/*.AppImage
