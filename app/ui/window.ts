@@ -80,7 +80,8 @@ export function newWindow(
   const sessions = new Map<string, Session>();
 
   // Get remote state manager if available (read lazily since it's set after newWindow returns)
-  const getStateManager = (): TerminalStateManager | undefined => (window as any).remoteStateManager;
+  const getStateManager = (): TerminalStateManager | undefined =>
+    (window as BrowserWindow & {remoteStateManager?: TerminalStateManager}).remoteStateManager;
 
   window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     console.error('Renderer failed to load', {errorCode, errorDescription, validatedURL});

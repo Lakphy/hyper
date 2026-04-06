@@ -1,7 +1,8 @@
 import {useEffect, useRef, useCallback} from 'react';
+
+import {useRemoteStore} from '../store/remote-store';
 import type {WSClientMessage, WSServerMessage} from '../types';
 import {decodeBinaryMessages, isBinarySessionData} from '../utils/binary-protocol-browser';
-import {useRemoteStore} from '../store/remote-store';
 
 // Session data events are dispatched via this EventTarget so terminal
 // components can subscribe without going through React re-renders.
@@ -106,9 +107,7 @@ export function useWebSocket(token: string) {
               dispatch({type: 'UPDATE_SESSION', payload: message.payload});
               break;
             case 'session_history':
-              sessionDataBus.dispatchEvent(
-                new SessionDataEvent(message.payload.uid, message.payload.data)
-              );
+              sessionDataBus.dispatchEvent(new SessionDataEvent(message.payload.uid, message.payload.data));
               dispatch({
                 type: 'HISTORY_CHUNK_RECEIVED',
                 payload: {uid: message.payload.uid, chunk: message.payload.chunk, total: message.payload.total}

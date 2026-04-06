@@ -1,6 +1,7 @@
 import React from 'react';
-import type {ConnectionStatus} from '../types';
+
 import {useRemoteStore} from '../store/remote-store';
+import type {ConnectionStatus} from '../types';
 
 const STATUS_LABELS: Record<ConnectionStatus, string> = {
   connecting: '⟳ Connecting…',
@@ -22,10 +23,10 @@ export function StatusBar() {
 
   return (
     <div className="status-bar">
-      <span className={`status-indicator ${STATUS_CLASSES[connectionStatus]}`}>
-        {STATUS_LABELS[connectionStatus]}
+      <span className={`status-indicator ${STATUS_CLASSES[connectionStatus]}`}>{STATUS_LABELS[connectionStatus]}</span>
+      <span className="status-sessions">
+        {sessions.length} session{sessions.length !== 1 ? 's' : ''}
       </span>
-      <span className="status-sessions">{sessions.length} session{sessions.length !== 1 ? 's' : ''}</span>
       {lastError && <span className="status-error">{lastError}</span>}
     </div>
   );

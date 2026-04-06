@@ -4,7 +4,11 @@ import Immutable from 'seamless-immutable';
 import type {Immutable as ImmutableType} from 'seamless-immutable';
 
 import {CONFIG_LOAD, CONFIG_RELOAD} from '../../typings/constants/config';
-import {NOTIFICATION_MESSAGE, NOTIFICATION_DISMISS, NOTIFICATION_REMOTE_URL} from '../../typings/constants/notifications';
+import {
+  NOTIFICATION_MESSAGE,
+  NOTIFICATION_DISMISS,
+  NOTIFICATION_REMOTE_URL
+} from '../../typings/constants/notifications';
 import {
   SESSION_ADD,
   SESSION_RESIZE,

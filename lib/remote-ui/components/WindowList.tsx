@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {useRemoteStore} from '../store/remote-store';
 import type {WindowInfo} from '../types';
 
@@ -55,9 +56,7 @@ export function WindowList() {
                       title={`PID: ${session.pid ?? 'N/A'}\nCWD: ${session.cwd ?? 'N/A'}`}
                     >
                       <span className="tab-index">{index + 1}</span>
-                      <span className="session-shell">
-                        {session.shell ? session.shell.split('/').pop() : 'shell'}
-                      </span>
+                      <span className="session-shell">{session.shell ? session.shell.split('/').pop() : 'shell'}</span>
                       <span className="session-pid">{session.pid ?? ''}</span>
                       {isLoadingHistory && <span className="history-loading-dot" />}
                     </button>

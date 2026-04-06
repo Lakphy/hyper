@@ -1,4 +1,6 @@
 import {clipboard, shell} from 'electron';
+import type {ComponentType} from 'react';
+
 import type {PlatformAPI} from './platform-context';
 import terms from './terms';
 import processClipboard from './utils/paste';
@@ -30,7 +32,7 @@ export const electronPlatform: PlatformAPI = {
   },
 
   decorate<T>(Component: T, name: string): T {
-    return decorate(Component as any, name) as T;
+    return decorate(Component as ComponentType<Record<string, any>>, name) as T;
   },
 
   reportRenderer(uid: string, type: string) {

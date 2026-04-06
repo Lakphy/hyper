@@ -1,7 +1,9 @@
 import React from 'react';
+
+import {useRemoteStore} from '../store/remote-store';
+
 import {RemoteTerminal} from './RemoteTerminal';
 import type {RemoteTerminalHandle} from './RemoteTerminal';
-import {useRemoteStore} from '../store/remote-store';
 
 interface TerminalGridProps {
   visibleUids: string[];

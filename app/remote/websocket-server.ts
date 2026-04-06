@@ -1,18 +1,34 @@
-import {createServer} from 'http';
 import * as crypto from 'crypto';
+import {createServer} from 'http';
+import type {IncomingMessage} from 'http';
 import * as path from 'path';
+
+/* eslint-disable import/no-extraneous-dependencies -- express/ws are runtime deps; TS resolver attributes @types */
 import express from 'express';
 import {WebSocketServer, WebSocket} from 'ws';
-import type {IncomingMessage} from 'http';
+/* eslint-enable import/no-extraneous-dependencies */
+
+import {AdaptiveThrottler} from './adaptive-throttler';
+import {encodeSessionData} from './binary-protocol';
 import {TerminalStateManager} from './state-manager';
 import type {TerminalSessionInfo} from './state-manager';
-import {encodeSessionData, isBinaryMessage, decodeSessionData} from './binary-protocol';
-import {WSDataBatcher} from './ws-data-batcher';
 import {SubscriptionManager} from './subscription-manager';
-import {AdaptiveThrottler} from './adaptive-throttler';
+import {WSDataBatcher} from './ws-data-batcher';
 
 interface WSMessage {
-  type: 'snapshot' | 'session_added' | 'session_removed' | 'session_updated' | 'session_data' | 'session_history' | 'input' | 'resize' | 'subscribe' | 'unsubscribe' | 'create_tab' | 'error';
+  type:
+    | 'snapshot'
+    | 'session_added'
+    | 'session_removed'
+    | 'session_updated'
+    | 'session_data'
+    | 'session_history'
+    | 'input'
+    | 'resize'
+    | 'subscribe'
+    | 'unsubscribe'
+    | 'create_tab'
+    | 'error';
   payload: any;
 }
 
@@ -177,9 +193,9 @@ export class RemoteTerminalServer {
         this.clients.delete(clientId);
         this.clientAlive.delete(clientId);
         this.subscriptionManager.removeClient(clientId);
-        const batcher = this.batchers.get(clientId);
-        if (batcher) {
-          batcher.destroy();
+        const clientBatcher = this.batchers.get(clientId);
+        if (clientBatcher) {
+          clientBatcher.destroy();
           this.batchers.delete(clientId);
         }
       });
@@ -228,19 +244,19 @@ export class RemoteTerminalServer {
 
       switch (message.type) {
         case 'subscribe':
-          this.handleSubscribe(clientId, message.payload);
+          this.handleSubscribe(clientId, message.payload as {uids: string[]});
           break;
         case 'unsubscribe':
-          this.handleUnsubscribe(clientId, message.payload);
+          this.handleUnsubscribe(clientId, message.payload as {uids: string[]});
           break;
         case 'input':
-          this.handleInput(message.payload);
+          this.handleInput(message.payload as {uid: string; data: string});
           break;
         case 'resize':
-          this.handleResize(message.payload);
+          this.handleResize(message.payload as {uid: string; cols: number; rows: number});
           break;
         case 'create_tab':
-          this.handleCreateTab(message.payload);
+          this.handleCreateTab(message.payload as {windowId?: string});
           break;
         default:
           throw new Error(`Unknown message type: ${message.type}`);

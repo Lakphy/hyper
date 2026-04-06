@@ -1,6 +1,7 @@
+import http from 'http';
+
 import test from 'ava';
 import {WebSocket} from 'ws';
-import http from 'http';
 
 import {RemoteTerminalServer} from '../../app/remote/websocket-server';
 
@@ -31,11 +32,13 @@ function waitForMessage(ws: WebSocket): Promise<any> {
 
 function httpGet(url: string): Promise<{status: number; body: string}> {
   return new Promise((resolve, reject) => {
-    http.get(url, (res) => {
-      let body = '';
-      res.on('data', (chunk: Buffer) => (body += chunk.toString()));
-      res.on('end', () => resolve({status: res.statusCode!, body}));
-    }).on('error', reject);
+    http
+      .get(url, (res) => {
+        let body = '';
+        res.on('data', (chunk: Buffer) => (body += chunk.toString()));
+        res.on('end', () => resolve({status: res.statusCode!, body}));
+      })
+      .on('error', reject);
   });
 }
 
@@ -87,10 +90,10 @@ test.serial('ws connection with invalid token is rejected', async (t) => {
 
   const ws = new WebSocket(`ws://127.0.0.1:${port}?token=bad-token`);
 
-  const code = await new Promise<number>((resolve) => {
-    ws.on('close', (code: number) => resolve(code));
+  const closeCode = await new Promise<number>((resolve) => {
+    ws.on('close', (c: number) => resolve(c));
   });
-  t.is(code, 1008); // Policy Violation
+  t.is(closeCode, 1008); // Policy Violation
 
   server.close();
 });
@@ -102,10 +105,10 @@ test.serial('ws connection without token is rejected', async (t) => {
 
   const ws = new WebSocket(`ws://127.0.0.1:${port}`);
 
-  const code = await new Promise<number>((resolve) => {
-    ws.on('close', (code: number) => resolve(code));
+  const closeCode = await new Promise<number>((resolve) => {
+    ws.on('close', (c: number) => resolve(c));
   });
-  t.is(code, 1008);
+  t.is(closeCode, 1008);
 
   server.close();
 });
@@ -354,7 +357,7 @@ test.serial('input message rejected when allowInput is false', async (t) => {
 
   ws.send(JSON.stringify({type: 'input', payload: {uid: 'no-input-session', data: 'ls\n'}}));
 
-  const errMsg = await waitForMessage(ws);
+  const errMsg = (await waitForMessage(ws)) as {type: string; payload: {message: string}};
   t.is(errMsg.type, 'error');
   t.truthy(errMsg.payload.message.includes('disabled'));
 

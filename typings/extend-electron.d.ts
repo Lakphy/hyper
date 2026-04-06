@@ -1,5 +1,5 @@
-import type {Server} from '../app/rpc';
 import type {TerminalStateManager} from '../app/remote/state-manager';
+import type {Server} from '../app/rpc';
 
 declare global {
   namespace Electron {

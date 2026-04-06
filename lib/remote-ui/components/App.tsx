@@ -1,9 +1,12 @@
 import React, {useRef, useEffect, useCallback, useMemo, useState} from 'react';
+
+import {useWebSocket, sessionDataBus} from '../hooks/useWebSocket';
+import type {SessionDataEvent} from '../hooks/useWebSocket';
 import {useRemoteStore} from '../store/remote-store';
-import {useWebSocket, sessionDataBus, SessionDataEvent} from '../hooks/useWebSocket';
+import type {WindowInfo} from '../types';
+
 import {RemoteTerminal} from './RemoteTerminal';
 import type {RemoteTerminalHandle} from './RemoteTerminal';
-import type {WindowInfo} from '../types';
 
 interface AppProps {
   token: string;
@@ -30,10 +33,7 @@ export function App({token}: AppProps) {
   }, []);
 
   // The active session and its window
-  const activeSession = useMemo(
-    () => state.sessions.find((s) => s.uid === activeUid),
-    [state.sessions, activeUid]
-  );
+  const activeSession = useMemo(() => state.sessions.find((s) => s.uid === activeUid), [state.sessions, activeUid]);
   const activeWindow = useMemo(
     () => state.windows.find((w) => w.uid === activeSession?.windowId),
     [state.windows, activeSession]
@@ -113,17 +113,6 @@ export function App({token}: AppProps) {
     send({type: 'create_tab', payload: {windowId: activeWindow?.uid}});
   }, [send, activeWindow]);
 
-  const handleWindowSelect = useCallback(
-    (windowInfo: WindowInfo) => {
-      // Select the first session of the clicked window
-      if (windowInfo.sessions.length > 0) {
-        dispatch({type: 'SET_ACTIVE_SESSION', payload: windowInfo.sessions[0]});
-      }
-      setWindowDropdownOpen(false);
-    },
-    [dispatch]
-  );
-
   // Determine title for single-tab mode
   const singleTabTitle = useMemo(() => {
     if (tabs.length === 1 && activeSession) {
@@ -142,9 +131,7 @@ export function App({token}: AppProps) {
       <header className="header">
         <nav className="tabs-nav">
           {/* Single tab: show centered title */}
-          {tabs.length === 1 && singleTabTitle ? (
-            <div className="tabs-title">{singleTabTitle}</div>
-          ) : null}
+          {tabs.length === 1 && singleTabTitle ? <div className="tabs-title">{singleTabTitle}</div> : null}
 
           {/* Multiple tabs: show tab list */}
           {showTabs ? (
@@ -191,10 +178,12 @@ export function App({token}: AppProps) {
 
           {/* Window selector dropdown */}
           {state.windows.length > 0 && (
-            <div className="window-selector" ref={dropdownRef} onClick={() => setWindowDropdownOpen(!windowDropdownOpen)}>
-              <span className="window-selector-icon">
-                {state.windows.length > 1 ? `${state.windows.length}` : ''}
-              </span>
+            <div
+              className="window-selector"
+              ref={dropdownRef}
+              onClick={() => setWindowDropdownOpen(!windowDropdownOpen)}
+            >
+              <span className="window-selector-icon">{state.windows.length > 1 ? `${state.windows.length}` : ''}</span>
               <span>&#9662;</span>
               {windowDropdownOpen && (
                 <div className="window-dropdown">
@@ -203,9 +192,7 @@ export function App({token}: AppProps) {
                     return (
                       <div key={win.uid} className="window-dropdown-group">
                         {wi > 0 && <div className="window-dropdown-separator" />}
-                        <div className="window-dropdown-header">
-                          {win.title || `Window ${wi + 1}`}
-                        </div>
+                        <div className="window-dropdown-header">{win.title || `Window ${wi + 1}`}</div>
                         {win.sessions.map((sessionUid) => {
                           const session = state.sessions.find((s) => s.uid === sessionUid);
                           if (!session) return null;

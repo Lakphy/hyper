@@ -24,7 +24,15 @@ interface Props {
   tabsVisible: boolean;
   remoteTerminalUrl?: string | null;
 }
-const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, borderColor, tabsVisible, remoteTerminalUrl}: Props) => {
+const DropdownButton = ({
+  defaultProfile,
+  profiles,
+  openNewTab,
+  backgroundColor,
+  borderColor,
+  tabsVisible,
+  remoteTerminalUrl
+}: Props) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef(null);
@@ -83,10 +91,7 @@ const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, 
           {remoteTerminalUrl && (
             <>
               <li className="profile_dropdown_divider" />
-              <li
-                className="profile_dropdown_item profile_dropdown_remote"
-                onClick={handleCopyUrl}
-              >
+              <li className="profile_dropdown_item profile_dropdown_remote" onClick={handleCopyUrl}>
                 <span className="remote_label">Remote URL</span>
                 <span className="remote_url">{remoteTerminalUrl}</span>
                 <span className="remote_copy">{copied ? 'Copied!' : 'Click to Copy'}</span>

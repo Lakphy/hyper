@@ -1,4 +1,5 @@
 import React, {createContext, useContext, useReducer} from 'react';
+
 import type {TerminalSessionInfo, WindowInfo, ConnectionStatus} from '../types';
 
 export interface RemoteState {
@@ -71,8 +72,7 @@ export function remoteReducer(state: RemoteState, action: RemoteAction): RemoteS
       const windows = state.windows
         .map((w) => ({...w, sessions: w.sessions.filter((s) => s !== uid)}))
         .filter((w) => w.sessions.length > 0);
-      const activeSessionUid =
-        state.activeSessionUid === uid ? (sessions[0]?.uid ?? null) : state.activeSessionUid;
+      const activeSessionUid = state.activeSessionUid === uid ? sessions[0]?.uid ?? null : state.activeSessionUid;
       // Clean up history loading for removed session
       const historyLoading = {...state.historyLoading};
       delete historyLoading[uid];

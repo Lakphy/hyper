@@ -1,4 +1,5 @@
 import {EventEmitter} from 'events';
+
 import {CircularBuffer} from './circular-buffer';
 
 export interface TerminalSessionInfo {

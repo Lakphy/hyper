@@ -25,14 +25,16 @@ import * as config from './config';
 config.setup();
 
 // Native
-import {resolve} from 'path';
 
 // Packages
+
+import {networkInterfaces} from 'os';
+import {resolve} from 'path';
+
 import {app, BrowserWindow, Menu, screen} from 'electron';
 
 import isDev from 'electron-is-dev';
 import {gitDescribe} from 'git-describe';
-import {networkInterfaces} from 'os';
 import parseUrl from 'parse-url';
 
 import * as AppMenu from './menus/menu';
@@ -197,12 +199,12 @@ app.on('ready', async () => {
     options: {size?: [number, number]; position?: [number, number]} = {},
     profileName: string = config.getDefaultProfile()
   ) {
-    const cfg = plugins.getDecoratedConfig(profileName);
+    const profileCfg = plugins.getDecoratedConfig(profileName);
 
     const winSet = config.getWin();
     let [startX, startY] = winSet.position;
 
-    const [width, height] = options.size ? options.size : cfg.windowSize || winSet.size;
+    const [width, height] = options.size ? options.size : profileCfg.windowSize || winSet.size;
 
     const winPos = options.position;
 
@@ -239,7 +241,7 @@ app.on('ready', async () => {
       [startX, startY] = config.windowDefaults.windowPosition;
     }
 
-    const hwin = newWindow({width, height, x: startX, y: startY}, cfg, fn, profileName);
+    const hwin = newWindow({width, height, x: startX, y: startY}, profileCfg, fn, profileName);
     windowSet.add(hwin);
 
     // Pass remote server state manager to window

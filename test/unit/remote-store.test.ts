@@ -265,7 +265,7 @@ test('SET_ERROR can clear error', (t) => {
 test('unknown action returns state unchanged', (t) => {
   const state = makeState({activeSessionUid: 's1'});
 
-  const result = remoteReducer(state, {type: 'UNKNOWN' as any, payload: null} as any);
+  const result = remoteReducer(state, {type: 'UNKNOWN', payload: null} as unknown as RemoteAction);
 
   t.deepEqual(result, state);
 });

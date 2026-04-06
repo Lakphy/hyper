@@ -18,20 +18,26 @@ export const browserPlatform: PlatformAPI = {
     return null;
   },
 
-  registerTerm(_uid: string, _term: any) {
+  registerTerm(uid: string, term: any) {
+    void uid;
+    void term;
     // No-op in browser — no imperative term registry needed
   },
 
-  unregisterTerm(_uid: string) {
+  unregisterTerm(uid: string) {
+    void uid;
     // No-op in browser
   },
 
-  decorate<T>(Component: T, _name: string): T {
+  decorate<T>(Component: T, name: string): T {
+    void name;
     // No plugin system in browser — return component as-is
     return Component;
   },
 
-  reportRenderer(_uid: string, _type: string) {
+  reportRenderer(uid: string, type: string) {
+    void uid;
+    void type;
     // No-op in browser — no main process to report to
   },
 

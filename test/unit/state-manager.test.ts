@@ -26,7 +26,7 @@ test.afterEach((t) => {
 
 function createManager(t: any): TerminalStateManager {
   const mgr = new TerminalStateManager();
-  (t.context as any).mgr = mgr;
+  t.context.mgr = mgr;
   return mgr;
 }
 

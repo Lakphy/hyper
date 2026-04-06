@@ -1,5 +1,7 @@
 import React, {useCallback, useRef, useImperativeHandle, forwardRef} from 'react';
+
 import type {Immutable} from 'seamless-immutable';
+
 import Term from '../../components/term';
 
 export interface RemoteTerminalHandle {
@@ -35,95 +37,93 @@ const defaultColors = {
 
 const noop = () => {};
 
-export const RemoteTerminal = forwardRef<RemoteTerminalHandle, RemoteTerminalProps>(
-  ({uid, onData, onResize}, ref) => {
-    const termInstanceRef = useRef<Term | null>(null);
+export const RemoteTerminal = forwardRef<RemoteTerminalHandle, RemoteTerminalProps>(({uid, onData, onResize}, ref) => {
+  const termInstanceRef = useRef<Term | null>(null);
 
-    const ref_ = useCallback((termUid: string, instance: Term | null) => {
-      termInstanceRef.current = instance;
-    }, []);
+  const ref_ = useCallback((termUid: string, instance: Term | null) => {
+    termInstanceRef.current = instance;
+  }, []);
 
-    useImperativeHandle(ref, () => ({
-      write(data: string) {
-        termInstanceRef.current?.write(data);
-      },
-      clear() {
-        termInstanceRef.current?.clear();
-      },
-      focus() {
-        termInstanceRef.current?.focus();
-      }
-    }));
+  useImperativeHandle(ref, () => ({
+    write(data: string) {
+      termInstanceRef.current?.write(data);
+    },
+    clear() {
+      termInstanceRef.current?.clear();
+    },
+    focus() {
+      termInstanceRef.current?.focus();
+    }
+  }));
 
-    const handleResize = useCallback(
-      (cols: number, rows: number) => {
-        onResize?.(cols, rows);
-      },
-      [onResize]
-    );
+  const handleResize = useCallback(
+    (cols: number, rows: number) => {
+      onResize?.(cols, rows);
+    },
+    [onResize]
+  );
 
-    const handleData = useCallback(
-      (data: string) => {
-        onData?.(data);
-      },
-      [onData]
-    );
+  const handleData = useCallback(
+    (data: string) => {
+      onData?.(data);
+    },
+    [onData]
+  );
 
-    return (
-      <Term
-        uid={uid}
-        ref_={ref_}
-        term={null}
-        fitAddon={null}
-        searchAddon={null}
-        isTermActive={true}
-        cols={null}
-        rows={null}
-        customChildren={undefined}
-        customChildrenBefore={undefined}
-        backgroundColor="#000000"
-        foregroundColor="#ffffff"
-        borderColor="#333"
-        cursorColor="rgba(248,28,229,0.8)"
-        cursorAccentColor="#000000"
-        selectionColor="rgba(248,28,229,0.3)"
-        colors={defaultColors as any}
-        cursorShape="BLOCK"
-        cursorBlink={true}
-        fontFamily='Menlo, "DejaVu Sans Mono", Consolas, "Lucida Console", monospace'
-        fontSize={13}
-        fontWeight="normal"
-        fontWeightBold="bold"
-        lineHeight={1}
-        letterSpacing={0}
-        padding="12px 14px"
-        scrollback={5000}
-        modifierKeys={{altIsMeta: false, cmdIsMeta: false} as Immutable<{altIsMeta: boolean; cmdIsMeta: boolean}>}
-        bell={false}
-        bellSound={null}
-        bellSoundURL={null}
-        copyOnSelect={false}
-        quickEdit={false}
-        macOptionSelectionMode=""
-        disableLigatures={false}
-        webGLRenderer={false}
-        webLinksActivationKey=""
-        screenReaderMode={false}
-        imageSupport={false}
-        uiFontFamily="system-ui, sans-serif"
-        search={false}
-        cleared={false}
-        onData={handleData}
-        onResize={handleResize}
-        onTitle={noop}
-        onActive={noop}
-        onOpenSearch={noop}
-        onCloseSearch={noop}
-        onContextMenu={noop}
-        windowsPty={undefined}
-      />
-    );
-  }
-);
+  return (
+    <Term
+      uid={uid}
+      ref_={ref_}
+      term={null}
+      fitAddon={null}
+      searchAddon={null}
+      isTermActive={true}
+      cols={null}
+      rows={null}
+      customChildren={undefined}
+      customChildrenBefore={undefined}
+      backgroundColor="#000000"
+      foregroundColor="#ffffff"
+      borderColor="#333"
+      cursorColor="rgba(248,28,229,0.8)"
+      cursorAccentColor="#000000"
+      selectionColor="rgba(248,28,229,0.3)"
+      colors={defaultColors as any}
+      cursorShape="BLOCK"
+      cursorBlink={true}
+      fontFamily='Menlo, "DejaVu Sans Mono", Consolas, "Lucida Console", monospace'
+      fontSize={13}
+      fontWeight="normal"
+      fontWeightBold="bold"
+      lineHeight={1}
+      letterSpacing={0}
+      padding="12px 14px"
+      scrollback={5000}
+      modifierKeys={{altIsMeta: false, cmdIsMeta: false} as Immutable<{altIsMeta: boolean; cmdIsMeta: boolean}>}
+      bell={false}
+      bellSound={null}
+      bellSoundURL={null}
+      copyOnSelect={false}
+      quickEdit={false}
+      macOptionSelectionMode=""
+      disableLigatures={false}
+      webGLRenderer={false}
+      webLinksActivationKey=""
+      screenReaderMode={false}
+      imageSupport={false}
+      uiFontFamily="system-ui, sans-serif"
+      search={false}
+      cleared={false}
+      onData={handleData}
+      onResize={handleResize}
+      onTitle={noop}
+      onActive={noop}
+      onOpenSearch={noop}
+      onCloseSearch={noop}
+      onContextMenu={noop}
+      windowsPty={undefined}
+    />
+  );
+});
 
 RemoteTerminal.displayName = 'RemoteTerminal';
