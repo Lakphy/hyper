@@ -1,10 +1,9 @@
-import React, {useRef, useEffect, useCallback, useMemo} from 'react';
+import React, {useRef, useEffect, useCallback, useMemo, useState} from 'react';
 import {useRemoteStore} from '../store/remote-store';
 import {useWebSocket, sessionDataBus, SessionDataEvent} from '../hooks/useWebSocket';
-import {TerminalGrid} from './TerminalGrid';
-import {WindowList} from './WindowList';
-import {StatusBar} from './StatusBar';
+import {RemoteTerminal} from './RemoteTerminal';
 import type {RemoteTerminalHandle} from './RemoteTerminal';
+import type {WindowInfo} from '../types';
 
 interface AppProps {
   token: string;
@@ -16,17 +15,42 @@ export function App({token}: AppProps) {
   const termRefs = useRef<Map<string, RemoteTerminalHandle | null>>(new Map());
   const activeUid = state.activeSessionUid;
   const prevVisibleRef = useRef<string[]>([]);
+  const [windowDropdownOpen, setWindowDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Compute visible uids based on layout mode
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setWindowDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // The active session and its window
+  const activeSession = useMemo(
+    () => state.sessions.find((s) => s.uid === activeUid),
+    [state.sessions, activeUid]
+  );
+  const activeWindow = useMemo(
+    () => state.windows.find((w) => w.uid === activeSession?.windowId),
+    [state.windows, activeSession]
+  );
+
+  // Build tabs: sessions belonging to the active window
+  const tabs = useMemo(() => {
+    if (!activeWindow) return [];
+    return activeWindow.sessions
+      .map((uid) => state.sessions.find((s) => s.uid === uid))
+      .filter(Boolean) as typeof state.sessions;
+  }, [activeWindow, state.sessions]);
+
+  // Only the active session is visible (tab mode)
   const visibleUids = useMemo(() => {
-    if (!activeUid) return [];
-    if (state.layoutMode === 'tabs') return [activeUid];
-    // Grid mode: show all sessions from the active session's window
-    const activeSession = state.sessions.find((s) => s.uid === activeUid);
-    if (!activeSession) return [activeUid];
-    const activeWindow = state.windows.find((w) => w.uid === activeSession.windowId);
-    return activeWindow ? activeWindow.sessions : [activeUid];
-  }, [activeUid, state.layoutMode, state.sessions, state.windows]);
+    return activeUid ? [activeUid] : [];
+  }, [activeUid]);
 
   // Manage subscriptions based on visible uids
   useEffect(() => {
@@ -45,9 +69,7 @@ export function App({token}: AppProps) {
       send({type: 'subscribe', payload: {uids: toSubscribe}});
     }
 
-    // Sync subscribed uids to store for reconnection recovery
     dispatch({type: 'SET_SUBSCRIBED_UIDS', payload: visibleUids});
-
     prevVisibleRef.current = visibleUids;
   }, [visibleUids, send]);
 
@@ -79,18 +101,166 @@ export function App({token}: AppProps) {
     [send]
   );
 
+  const handleTabSelect = useCallback(
+    (uid: string) => {
+      dispatch({type: 'SET_ACTIVE_SESSION', payload: uid});
+    },
+    [dispatch]
+  );
+
+  const handleCreateTab = useCallback(() => {
+    // Create a new tab in the current active window
+    send({type: 'create_tab', payload: {windowId: activeWindow?.uid}});
+  }, [send, activeWindow]);
+
+  const handleWindowSelect = useCallback(
+    (windowInfo: WindowInfo) => {
+      // Select the first session of the clicked window
+      if (windowInfo.sessions.length > 0) {
+        dispatch({type: 'SET_ACTIVE_SESSION', payload: windowInfo.sessions[0]});
+      }
+      setWindowDropdownOpen(false);
+    },
+    [dispatch]
+  );
+
+  // Determine title for single-tab mode
+  const singleTabTitle = useMemo(() => {
+    if (tabs.length === 1 && activeSession) {
+      const shell = activeSession.shell ? activeSession.shell.split('/').pop() : 'shell';
+      return `${shell}${activeSession.pid ? ` (${activeSession.pid})` : ''}`;
+    }
+    return null;
+  }, [tabs, activeSession]);
+
+  const showTabs = tabs.length > 1;
+  const {historyLoading, connectionStatus} = state;
+
   return (
-    <div className="app">
-      <WindowList />
-      <div className="main-area">
-        {visibleUids.length > 0 ? (
-          <TerminalGrid
-            visibleUids={visibleUids}
-            activeUid={activeUid}
-            termRefs={termRefs}
-            onData={handleData}
-            onResize={handleResize}
-          />
+    <div className="hyper-remote">
+      {/* Header with tab bar */}
+      <header className="header">
+        <nav className="tabs-nav">
+          {/* Single tab: show centered title */}
+          {tabs.length === 1 && singleTabTitle ? (
+            <div className="tabs-title">{singleTabTitle}</div>
+          ) : null}
+
+          {/* Multiple tabs: show tab list */}
+          {showTabs ? (
+            <ul className="tabs-list">
+              {tabs.map((session, i) => {
+                const isActive = session.uid === activeUid;
+                const isFirst = i === 0;
+                const shell = session.shell ? session.shell.split('/').pop() : 'shell';
+                const title = `${shell}${session.pid ? ` (${session.pid})` : ''}`;
+                return (
+                  <li
+                    key={session.uid}
+                    className={`tab ${isFirst ? 'tab--first' : ''} ${isActive ? 'tab--active' : ''} ${
+                      isFirst && isActive ? 'tab--first-active' : ''
+                    }`}
+                  >
+                    <span className="tab-text" onClick={() => handleTabSelect(session.uid)}>
+                      <span className="tab-text-inner" title={title}>
+                        {title}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+
+          {/* No sessions: empty space */}
+          {tabs.length === 0 && <div className="tabs-title">Hyper Remote</div>}
+
+          {/* New tab button */}
+          <div
+            className={`new-tab ${tabs.length > 0 ? 'new-tab--visible' : 'new-tab--hidden'}`}
+            title="New Tab"
+            onClick={handleCreateTab}
+          >
+            +
+          </div>
+
+          {/* Connection status indicator */}
+          <div className="connection-indicator">
+            <span className={`connection-dot connection-dot--${connectionStatus}`} />
+          </div>
+
+          {/* Window selector dropdown */}
+          {state.windows.length > 0 && (
+            <div className="window-selector" ref={dropdownRef} onClick={() => setWindowDropdownOpen(!windowDropdownOpen)}>
+              <span className="window-selector-icon">
+                {state.windows.length > 1 ? `${state.windows.length}` : ''}
+              </span>
+              <span>&#9662;</span>
+              {windowDropdownOpen && (
+                <div className="window-dropdown">
+                  {state.windows.map((win: WindowInfo, wi: number) => {
+                    const isCurrentWindow = win.uid === activeWindow?.uid;
+                    return (
+                      <div key={win.uid} className="window-dropdown-group">
+                        {wi > 0 && <div className="window-dropdown-separator" />}
+                        <div className="window-dropdown-header">
+                          {win.title || `Window ${wi + 1}`}
+                        </div>
+                        {win.sessions.map((sessionUid) => {
+                          const session = state.sessions.find((s) => s.uid === sessionUid);
+                          if (!session) return null;
+                          const shell = session.shell ? session.shell.split('/').pop() : 'shell';
+                          const isCurrent = session.uid === activeUid;
+                          return (
+                            <button
+                              key={sessionUid}
+                              className={`window-dropdown-item ${
+                                isCurrent ? 'window-dropdown-item--current' : ''
+                              } ${isCurrentWindow ? 'window-dropdown-item--active' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTabSelect(sessionUid);
+                                setWindowDropdownOpen(false);
+                              }}
+                            >
+                              <span>{shell}</span>
+                              {session.pid && <span style={{color: '#666', fontSize: 11}}>{session.pid}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </nav>
+      </header>
+
+      {/* Terminal Area */}
+      <div className="terms">
+        {activeUid ? (
+          <div className="remote-terminal">
+            {historyLoading[activeUid] && (
+              <div className="history-loading">
+                Loading history ({historyLoading[activeUid].received}/{historyLoading[activeUid].total})
+              </div>
+            )}
+            <RemoteTerminal
+              key={activeUid}
+              ref={(handle) => {
+                if (handle) {
+                  termRefs.current.set(activeUid, handle);
+                } else {
+                  termRefs.current.delete(activeUid);
+                }
+              }}
+              uid={activeUid}
+              onData={(data) => handleData(activeUid, data)}
+              onResize={(cols, rows) => handleResize(activeUid, cols, rows)}
+            />
+          </div>
         ) : (
           <div className="no-session">
             <p>No active terminal sessions</p>
@@ -98,7 +268,6 @@ export function App({token}: AppProps) {
           </div>
         )}
       </div>
-      <StatusBar />
     </div>
   );
 }

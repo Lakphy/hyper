@@ -41,7 +41,8 @@ const mapStateToProps = (state: HyperState) => {
     showHamburgerMenu: state.ui.showHamburgerMenu,
     showWindowControls: state.ui.showWindowControls,
     defaultProfile: state.ui.defaultProfile,
-    profiles: state.ui.profiles
+    profiles: state.ui.profiles,
+    remoteTerminalUrl: state.ui.remoteTerminalUrl
   };
 };
 

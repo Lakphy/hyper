@@ -84,6 +84,7 @@ export type uiState = Immutable<{
   notifications: {
     font: boolean;
     message: boolean;
+    remoteUrl: boolean;
     resize: boolean;
     updates: boolean;
   };
@@ -108,6 +109,7 @@ export type uiState = Immutable<{
   windowsPty?: IWindowsPty;
   defaultProfile: string;
   profiles: configOptions['profiles'];
+  remoteTerminalUrl: string | null;
 }>;
 
 export type session = {
@@ -247,6 +249,7 @@ export type TabsProps = {
   defaultProfile: string;
   profiles: configOptions['profiles'];
   openNewTab: (profile: string) => void;
+  remoteTerminalUrl?: string | null;
 } & extensionProps;
 
 export type NotificationProps = {

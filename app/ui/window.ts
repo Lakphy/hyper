@@ -287,6 +287,13 @@ export function newWindow(
         session.resize({cols, rows});
       }
     });
+
+    sm.on('remote_create_tab', ({windowId}: {windowId: string | null}) => {
+      // If windowId is specified, only the matching window creates the tab.
+      // If null, the first window that receives the event creates it.
+      if (windowId && windowId !== window.uid) return;
+      rpc.emit('termgroup add req', {});
+    });
   };
   // Try immediately, then retry after a short delay to catch the deferred assignment
   setupRemoteListeners();

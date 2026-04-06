@@ -50,6 +50,7 @@ export type MainEvents = {
 export type RendererEvents = {
   ready: never;
   'add notification': {text: string; url: string; dismissable: boolean};
+  'remote terminal url': {url: string};
   'update available': {releaseNotes: string; releaseName: string; releaseUrl: string; canInstall: boolean};
   'open ssh': ReturnType<typeof parseUrl>;
   'open file': {path: string};

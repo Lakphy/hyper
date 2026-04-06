@@ -12,7 +12,7 @@ import {SubscriptionManager} from './subscription-manager';
 import {AdaptiveThrottler} from './adaptive-throttler';
 
 interface WSMessage {
-  type: 'snapshot' | 'session_added' | 'session_removed' | 'session_updated' | 'session_data' | 'session_history' | 'input' | 'resize' | 'subscribe' | 'unsubscribe' | 'error';
+  type: 'snapshot' | 'session_added' | 'session_removed' | 'session_updated' | 'session_data' | 'session_history' | 'input' | 'resize' | 'subscribe' | 'unsubscribe' | 'create_tab' | 'error';
   payload: any;
 }
 
@@ -239,6 +239,9 @@ export class RemoteTerminalServer {
         case 'resize':
           this.handleResize(message.payload);
           break;
+        case 'create_tab':
+          this.handleCreateTab(message.payload);
+          break;
         default:
           throw new Error(`Unknown message type: ${message.type}`);
       }
@@ -306,6 +309,22 @@ export class RemoteTerminalServer {
 
     // Emit event that will be handled by the session in window.ts
     this.stateManager.emit('remote_resize', {uid, cols, rows});
+  }
+
+  private handleCreateTab(payload: {windowId?: string}) {
+    const {windowId} = payload;
+
+    // If a windowId is provided, verify it exists
+    if (windowId) {
+      const windows = this.stateManager.getAllWindows();
+      const targetWindow = windows.find((w) => w.uid === windowId);
+      if (!targetWindow) {
+        throw new Error('Window not found');
+      }
+    }
+
+    // Emit event that will be handled in window.ts to create a new tab
+    this.stateManager.emit('remote_create_tab', {windowId: windowId || null});
   }
 
   private async sendSessionHistory(ws: WebSocket, uid: string) {

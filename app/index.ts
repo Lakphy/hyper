@@ -32,6 +32,7 @@ import {app, BrowserWindow, Menu, screen} from 'electron';
 
 import isDev from 'electron-is-dev';
 import {gitDescribe} from 'git-describe';
+import {networkInterfaces} from 'os';
 import parseUrl from 'parse-url';
 
 import * as AppMenu from './menus/menu';
@@ -45,6 +46,35 @@ const windowSet = new Set<BrowserWindow>([]);
 
 // Remote terminal server
 let remoteServer: RemoteTerminalServer | null = null;
+
+function getInternalIP(): string {
+  const interfaces = networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      // Skip internal (loopback) and non-IPv4 addresses
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
+
+function getRemoteTerminalUrl(): string | null {
+  if (!remoteServer) return null;
+  const cfg = config.getConfig();
+  const port = cfg.remoteTerminal?.port || 3030;
+  const ip = getInternalIP();
+  const token = remoteServer.getAuthToken();
+  return token ? `http://${ip}:${port}?token=${token}` : `http://${ip}:${port}`;
+}
+
+function sendRemoteUrlToWindow(win: BrowserWindow) {
+  const url = getRemoteTerminalUrl();
+  if (url && win.rpc) {
+    win.rpc.emit('remote terminal url', {url});
+  }
+}
 
 // expose to plugins
 app.config = config;
@@ -216,6 +246,12 @@ app.on('ready', async () => {
     if (remoteServer) {
       hwin.remoteStateManager = remoteServer.getStateManager();
     }
+
+    // Send remote terminal URL to window after it initializes
+    hwin.webContents.on('did-finish-load', () => {
+      // Small delay to ensure RPC is ready
+      setTimeout(() => sendRemoteUrlToWindow(hwin), 500);
+    });
 
     void hwin.loadURL(url);
 

@@ -7,9 +7,13 @@ import Notification_ from './notification';
 
 const electronShell = (
   window as typeof window & {
-    require: (id: 'electron') => {shell: {openExternal: (url: string) => void | Promise<void>}};
+    require: (id: 'electron') => {
+      shell: {openExternal: (url: string) => void | Promise<void>};
+    };
   }
-).require('electron').shell;
+).require('electron');
+
+const {shell: electronShellApi} = electronShell;
 
 const Notification = decorate(Notification_, 'Notification');
 
@@ -54,7 +58,7 @@ const Notifications = forwardRef<HTMLDivElement, NotificationsProps>((props, ref
               <a
                 style={{color: '#fff'}}
                 onClick={(ev) => {
-                  void electronShell.openExternal(ev.currentTarget.href);
+                  void electronShellApi.openExternal(ev.currentTarget.href);
                   ev.preventDefault();
                 }}
                 href={props.messageURL}
@@ -81,7 +85,7 @@ const Notifications = forwardRef<HTMLDivElement, NotificationsProps>((props, ref
           <a
             style={{color: '#000'}}
             onClick={(ev) => {
-              void electronShell.openExternal(ev.currentTarget.href);
+              void electronShellApi.openExternal(ev.currentTarget.href);
               ev.preventDefault();
             }}
             href={`https://github.com/vercel/hyper/releases/tag/${props.updateVersion}`}
@@ -109,7 +113,7 @@ const Notifications = forwardRef<HTMLDivElement, NotificationsProps>((props, ref
                 fontWeight: 'bold'
               }}
               onClick={(ev) => {
-                void electronShell.openExternal(ev.currentTarget.href);
+                void electronShellApi.openExternal(ev.currentTarget.href);
                 ev.preventDefault();
               }}
               href={props.updateReleaseUrl!}

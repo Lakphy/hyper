@@ -45,7 +45,7 @@ const Tabs = forwardRef<HTMLElement, TabsProps>((props, ref) => {
           )}
         </>
       ) : null}
-      <DropdownButton {...props} tabsVisible={tabs.length > 1} />
+      <DropdownButton {...props} tabsVisible={tabs.length > 1} remoteTerminalUrl={props.remoteTerminalUrl} />
       {props.customChildren}
 
       <style jsx>{`

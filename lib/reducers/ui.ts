@@ -4,7 +4,7 @@ import Immutable from 'seamless-immutable';
 import type {Immutable as ImmutableType} from 'seamless-immutable';
 
 import {CONFIG_LOAD, CONFIG_RELOAD} from '../../typings/constants/config';
-import {NOTIFICATION_MESSAGE, NOTIFICATION_DISMISS} from '../../typings/constants/notifications';
+import {NOTIFICATION_MESSAGE, NOTIFICATION_DISMISS, NOTIFICATION_REMOTE_URL} from '../../typings/constants/notifications';
 import {
   SESSION_ADD,
   SESSION_RESIZE,
@@ -86,7 +86,8 @@ const initial: uiState = Immutable<Mutable<uiState>>({
     font: false,
     resize: false,
     updates: false,
-    message: false
+    message: false,
+    remoteUrl: false
   },
   fullScreen: false,
   foregroundColor: '#fff',
@@ -100,6 +101,7 @@ const initial: uiState = Immutable<Mutable<uiState>>({
   messageText: null,
   messageURL: null,
   messageDismissable: null,
+  remoteTerminalUrl: null,
   bell: 'SOUND',
   bellSoundURL: null, // directly relates to the value in the configuration file
   bellSound: null, // A base64 encoded binary string representation of the audio data from the bellSoundURL
@@ -434,6 +436,10 @@ const reducer: IUiReducer = (state = initial, action) => {
         messageURL: action.url,
         messageDismissable: action.dismissable === true
       });
+      break;
+
+    case NOTIFICATION_REMOTE_URL:
+      state_ = state.set('remoteTerminalUrl', action.url);
       break;
 
     case UPDATE_AVAILABLE:

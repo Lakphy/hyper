@@ -5,6 +5,16 @@ import useClickAway from 'react-use/lib/useClickAway';
 
 import type {configOptions} from '../../typings/config';
 
+const electronShell = (
+  window as typeof window & {
+    require: (id: 'electron') => {
+      clipboard: {writeText: (text: string) => void};
+    };
+  }
+).require('electron');
+
+const {clipboard} = electronShell;
+
 interface Props {
   defaultProfile: string;
   profiles: configOptions['profiles'];
@@ -12,9 +22,11 @@ interface Props {
   backgroundColor: string;
   borderColor: string;
   tabsVisible: boolean;
+  remoteTerminalUrl?: string | null;
 }
-const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, borderColor, tabsVisible}: Props) => {
+const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, borderColor, tabsVisible, remoteTerminalUrl}: Props) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const ref = useRef(null);
 
   const toggleDropdown = () => {
@@ -24,6 +36,15 @@ const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, 
   useClickAway(ref, () => {
     setDropdownOpen(false);
   });
+
+  const handleCopyUrl = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (remoteTerminalUrl) {
+      clipboard.writeText(remoteTerminalUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div
@@ -59,6 +80,19 @@ const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, 
               {profile.name}
             </li>
           ))}
+          {remoteTerminalUrl && (
+            <>
+              <li className="profile_dropdown_divider" />
+              <li
+                className="profile_dropdown_item profile_dropdown_remote"
+                onClick={handleCopyUrl}
+              >
+                <span className="remote_label">Remote URL</span>
+                <span className="remote_url">{remoteTerminalUrl}</span>
+                <span className="remote_copy">{copied ? 'Copied!' : 'Click to Copy'}</span>
+              </li>
+            </>
+          )}
         </ul>
       )}
 
@@ -102,6 +136,48 @@ const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, 
         }
 
         .profile_dropdown_item_default {
+          font-weight: bold;
+        }
+
+        .profile_dropdown_divider {
+          height: 1px;
+          background-color: ${borderColor};
+          margin: 0;
+          padding: 0;
+        }
+
+        .profile_dropdown_remote {
+          height: auto;
+          line-height: 1.4;
+          padding: 10px 16px;
+          white-space: normal;
+          text-transform: none;
+        }
+
+        .remote_label {
+          display: block;
+          font-size: 10px;
+          color: #999;
+          margin-bottom: 4px;
+        }
+
+        .remote_url {
+          display: block;
+          font-size: 11px;
+          font-family: Menlo, monospace;
+          background: rgba(255, 255, 255, 0.08);
+          padding: 4px 6px;
+          border-radius: 3px;
+          word-break: break-all;
+          color: #fff;
+          margin-bottom: 6px;
+          max-width: 280px;
+        }
+
+        .remote_copy {
+          display: block;
+          font-size: 11px;
+          color: #50e3c2;
           font-weight: bold;
         }
 

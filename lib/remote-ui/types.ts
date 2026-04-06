@@ -34,6 +34,7 @@ export type WSClientMessage =
   | {type: 'subscribe'; payload: {uids: string[]}}
   | {type: 'unsubscribe'; payload: {uids: string[]}}
   | {type: 'input'; payload: {uid: string; data: string}}
-  | {type: 'resize'; payload: {uid: string; cols: number; rows: number}};
+  | {type: 'resize'; payload: {uid: string; cols: number; rows: number}}
+  | {type: 'create_tab'; payload: {windowId?: string}};
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
