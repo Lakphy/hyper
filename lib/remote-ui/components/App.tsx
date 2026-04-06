@@ -11,7 +11,7 @@ interface AppProps {
 }
 
 export function App({token}: AppProps) {
-  const {state} = useRemoteStore();
+  const {state, dispatch} = useRemoteStore();
   const {send} = useWebSocket(token);
   const termRefs = useRef<Map<string, RemoteTerminalHandle | null>>(new Map());
   const activeUid = state.activeSessionUid;
@@ -44,6 +44,9 @@ export function App({token}: AppProps) {
     if (toSubscribe.length > 0) {
       send({type: 'subscribe', payload: {uids: toSubscribe}});
     }
+
+    // Sync subscribed uids to store for reconnection recovery
+    dispatch({type: 'SET_SUBSCRIBED_UIDS', payload: visibleUids});
 
     prevVisibleRef.current = visibleUids;
   }, [visibleUids, send]);

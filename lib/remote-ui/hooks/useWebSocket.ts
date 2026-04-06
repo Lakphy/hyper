@@ -16,12 +16,16 @@ export class SessionDataEvent extends Event {
   }
 }
 
+const SILENCE_TIMEOUT = 45000; // 45s — longer than server's 30s ping interval
+
 export function useWebSocket(token: string) {
   const {state, dispatch} = useRemoteStore();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>();
+  const silenceTimer = useRef<ReturnType<typeof setTimeout>>();
   const backoffRef = useRef(1000);
   const mountedRef = useRef(true);
+  const subscribedUidsRef = useRef(state.subscribedUids);
 
   const send = useCallback((message: WSClientMessage) => {
     const ws = wsRef.current;
@@ -30,8 +34,22 @@ export function useWebSocket(token: string) {
     }
   }, []);
 
+  // Keep ref in sync with store
+  useEffect(() => {
+    subscribedUidsRef.current = state.subscribedUids;
+  }, [state.subscribedUids]);
+
   useEffect(() => {
     mountedRef.current = true;
+
+    function resetSilenceTimer(ws: WebSocket) {
+      if (silenceTimer.current) clearTimeout(silenceTimer.current);
+      silenceTimer.current = setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close(4000, 'Silence timeout');
+        }
+      }, SILENCE_TIMEOUT);
+    }
 
     function connect() {
       if (!mountedRef.current) return;
@@ -49,10 +67,18 @@ export function useWebSocket(token: string) {
         dispatch({type: 'SET_CONNECTION_STATUS', payload: 'connected'});
         dispatch({type: 'SET_ERROR', payload: null});
         backoffRef.current = 1000;
+        resetSilenceTimer(ws);
+
+        // Re-subscribe to previously visible sessions after reconnect
+        const uids = subscribedUidsRef.current;
+        if (uids.length > 0) {
+          ws.send(JSON.stringify({type: 'subscribe', payload: {uids}}));
+        }
       };
 
       ws.onmessage = (event: MessageEvent) => {
         if (!mountedRef.current) return;
+        resetSilenceTimer(ws);
 
         if (event.data instanceof ArrayBuffer) {
           if (isBinarySessionData(event.data)) {
@@ -75,6 +101,9 @@ export function useWebSocket(token: string) {
               break;
             case 'session_removed':
               dispatch({type: 'REMOVE_SESSION', payload: message.payload});
+              break;
+            case 'session_updated':
+              dispatch({type: 'UPDATE_SESSION', payload: message.payload});
               break;
             case 'session_history':
               sessionDataBus.dispatchEvent(
@@ -122,6 +151,7 @@ export function useWebSocket(token: string) {
     return () => {
       mountedRef.current = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (silenceTimer.current) clearTimeout(silenceTimer.current);
       if (wsRef.current) {
         wsRef.current.onclose = null; // prevent reconnect on intentional close
         wsRef.current.close();

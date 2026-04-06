@@ -14,6 +14,7 @@ function makeState(overrides: Partial<RemoteState> = {}): RemoteState {
     layoutMode: 'tabs',
     historyLoading: {},
     collapsedWindows: {},
+    subscribedUids: [],
     ...overrides
   };
 }

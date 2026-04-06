@@ -9,6 +9,8 @@ export interface TerminalSessionInfo {
   pid: number | null;
   cwd?: string;
   profile?: string;
+  cols?: number;
+  rows?: number;
   createdAt: number;
 }
 
@@ -23,6 +25,7 @@ export type WSServerMessage =
   | {type: 'snapshot'; payload: {sessions: TerminalSessionInfo[]; windows: WindowInfo[]}}
   | {type: 'session_added'; payload: TerminalSessionInfo}
   | {type: 'session_removed'; payload: {uid: string}}
+  | {type: 'session_updated'; payload: {uid: string; changes: Partial<TerminalSessionInfo>}}
   | {type: 'session_history'; payload: {uid: string; data: string; chunk: number; total: number}}
   | {type: 'error'; payload: {message: string}};
 

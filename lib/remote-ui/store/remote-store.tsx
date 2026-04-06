@@ -10,6 +10,7 @@ export interface RemoteState {
   layoutMode: 'tabs' | 'grid';
   historyLoading: Record<string, {received: number; total: number}>;
   collapsedWindows: Record<string, boolean>;
+  subscribedUids: string[];
 }
 
 const initialState: RemoteState = {
@@ -20,7 +21,8 @@ const initialState: RemoteState = {
   lastError: null,
   layoutMode: 'tabs',
   historyLoading: {},
-  collapsedWindows: {}
+  collapsedWindows: {},
+  subscribedUids: []
 };
 
 export type RemoteAction =
@@ -33,7 +35,9 @@ export type RemoteAction =
   | {type: 'SET_LAYOUT_MODE'; payload: 'tabs' | 'grid'}
   | {type: 'HISTORY_CHUNK_RECEIVED'; payload: {uid: string; chunk: number; total: number}}
   | {type: 'HISTORY_COMPLETE'; payload: {uid: string}}
-  | {type: 'TOGGLE_WINDOW_COLLAPSED'; payload: string};
+  | {type: 'TOGGLE_WINDOW_COLLAPSED'; payload: string}
+  | {type: 'SET_SUBSCRIBED_UIDS'; payload: string[]}
+  | {type: 'UPDATE_SESSION'; payload: {uid: string; changes: Partial<TerminalSessionInfo>}};
 
 export function remoteReducer(state: RemoteState, action: RemoteAction): RemoteState {
   switch (action.type) {
@@ -106,6 +110,13 @@ export function remoteReducer(state: RemoteState, action: RemoteAction): RemoteS
           [windowUid]: !state.collapsedWindows[windowUid]
         }
       };
+    }
+    case 'SET_SUBSCRIBED_UIDS':
+      return {...state, subscribedUids: action.payload};
+    case 'UPDATE_SESSION': {
+      const {uid, changes} = action.payload;
+      const sessions = state.sessions.map((s) => (s.uid === uid ? {...s, ...changes} : s));
+      return {...state, sessions};
     }
     default:
       return state;

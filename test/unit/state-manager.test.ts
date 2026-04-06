@@ -194,3 +194,43 @@ test('destroy removes all event listeners', (t) => {
   t.is(mgr.listenerCount('session_data'), 0);
   (t.context as any).mgr = undefined;
 });
+
+// --- updateSession ---
+
+test('updateSession merges changes into existing session', (t) => {
+  const mgr = createManager(t);
+  mgr.registerSession(makeSession({uid: 's1'}));
+  mgr.updateSession('s1', {cols: 120, rows: 40});
+
+  const session = mgr.getSession('s1');
+  t.is(session?.cols, 120);
+  t.is(session?.rows, 40);
+  // Original fields preserved
+  t.is(session?.shell, '/bin/zsh');
+});
+
+test('updateSession emits session_updated event', (t) => {
+  const mgr = createManager(t);
+  mgr.registerSession(makeSession({uid: 's1'}));
+
+  let emitted: any = null;
+  mgr.on('session_updated', (data) => {
+    emitted = data;
+  });
+
+  mgr.updateSession('s1', {cols: 80, rows: 24});
+  t.truthy(emitted);
+  t.is(emitted.uid, 's1');
+  t.deepEqual(emitted.changes, {cols: 80, rows: 24});
+});
+
+test('updateSession on non-existent uid is a no-op', (t) => {
+  const mgr = createManager(t);
+  let emitted = false;
+  mgr.on('session_updated', () => {
+    emitted = true;
+  });
+
+  mgr.updateSession('ghost', {cols: 80});
+  t.false(emitted);
+});

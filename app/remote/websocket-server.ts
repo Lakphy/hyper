@@ -12,7 +12,7 @@ import {SubscriptionManager} from './subscription-manager';
 import {AdaptiveThrottler} from './adaptive-throttler';
 
 interface WSMessage {
-  type: 'snapshot' | 'session_added' | 'session_removed' | 'session_data' | 'session_history' | 'input' | 'resize' | 'subscribe' | 'unsubscribe' | 'error';
+  type: 'snapshot' | 'session_added' | 'session_removed' | 'session_updated' | 'session_data' | 'session_history' | 'input' | 'resize' | 'subscribe' | 'unsubscribe' | 'error';
   payload: any;
 }
 
@@ -42,6 +42,8 @@ export class RemoteTerminalServer {
   private authToken: string;
   private config: RemoteConfig;
   private port: number;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private clientAlive = new Map<string, boolean>();
 
   constructor(port: number = 3030, config: RemoteConfig = {}) {
     this.port = port;
@@ -66,12 +68,19 @@ export class RemoteTerminalServer {
     this.app = express();
     this.httpServer = createServer(this.app);
 
-    // Setup WebSocket server
-    this.wss = new WebSocketServer({server: this.httpServer});
+    // Setup WebSocket server with compression
+    this.wss = new WebSocketServer({
+      server: this.httpServer,
+      perMessageDeflate: {
+        zlibDeflateOptions: {level: 1}, // fast compression, low CPU
+        threshold: 1024 // only compress messages > 1KB
+      }
+    });
 
     this.setupRoutes();
     this.setupWebSocket();
     this.setupStateListeners();
+    this.startHeartbeat();
 
     // Start server
     this.httpServer.listen(port, this.config.host, () => {
@@ -79,7 +88,35 @@ export class RemoteTerminalServer {
     });
   }
 
+  private parseCookies(header: string | undefined): Record<string, string> {
+    if (!header) return {};
+    const cookies: Record<string, string> = {};
+    for (const pair of header.split(';')) {
+      const [name, ...rest] = pair.trim().split('=');
+      if (name && rest.length > 0) {
+        cookies[name.trim()] = rest.join('=').trim();
+      }
+    }
+    return cookies;
+  }
+
   private setupRoutes() {
+    // Auth middleware for HTTP requests
+    this.app.use((req, res, next) => {
+      if (!this.authToken) return next();
+      if (req.path === '/health') return next();
+
+      const token = (req.query.token as string) || this.parseCookies(req.headers.cookie)?.token;
+      if (token === this.authToken) {
+        // Set cookie so subsequent asset requests don't need ?token
+        if (!this.parseCookies(req.headers.cookie)?.token) {
+          res.cookie('token', token, {httpOnly: true, sameSite: 'strict', maxAge: 86400000});
+        }
+        return next();
+      }
+      res.status(401).json({error: 'Unauthorized'});
+    });
+
     // Serve Web UI static files
     const remoteUiPath = path.resolve(__dirname, '..', 'remote-ui');
     this.app.use(express.static(remoteUiPath));
@@ -109,6 +146,7 @@ export class RemoteTerminalServer {
 
       const clientId = crypto.randomUUID();
       this.clients.set(clientId, ws);
+      this.clientAlive.set(clientId, true);
 
       // Create batcher for this client
       const batcher = new WSDataBatcher((batch: Buffer) => {
@@ -121,6 +159,11 @@ export class RemoteTerminalServer {
       // Send initial snapshot
       this.sendSnapshot(ws);
 
+      // Handle heartbeat pong
+      ws.on('pong', () => {
+        this.clientAlive.set(clientId, true);
+      });
+
       // Handle messages
       ws.on('message', (data: Buffer) => {
         this.handleClientMessage(clientId, ws, data);
@@ -129,6 +172,7 @@ export class RemoteTerminalServer {
       // Handle disconnect
       ws.on('close', () => {
         this.clients.delete(clientId);
+        this.clientAlive.delete(clientId);
         this.subscriptionManager.removeClient(clientId);
         const batcher = this.batchers.get(clientId);
         if (batcher) {
@@ -151,6 +195,10 @@ export class RemoteTerminalServer {
 
     this.stateManager.on('session_removed', (data: {uid: string}) => {
       this.broadcast({type: 'session_removed', payload: data});
+    });
+
+    this.stateManager.on('session_updated', (data: {uid: string; changes: Partial<TerminalSessionInfo>}) => {
+      this.broadcast({type: 'session_updated', payload: data});
     });
 
     this.stateManager.on('session_data', ({uid, data}: {uid: string; data: string}) => {
@@ -341,7 +389,29 @@ export class RemoteTerminalServer {
     return this.stateManager;
   }
 
+  getAuthToken(): string {
+    return this.authToken;
+  }
+
+  private startHeartbeat() {
+    this.heartbeatInterval = setInterval(() => {
+      for (const [clientId, ws] of this.clients) {
+        if (!this.clientAlive.get(clientId)) {
+          ws.terminate();
+          continue;
+        }
+        this.clientAlive.set(clientId, false);
+        ws.ping();
+      }
+    }, 30000);
+  }
+
   close() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    this.clientAlive.clear();
     this.stateManager.destroy();
     this.wss.close();
     this.httpServer.close();

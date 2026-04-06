@@ -218,6 +218,8 @@ export function newWindow(
         pid: session.pty ? session.pty.pid : null,
         cwd: options.cwd,
         profile: options.profile,
+        cols: session.pty?.cols,
+        rows: session.pty?.rows,
         createdAt: Date.now()
       });
     }
@@ -289,6 +291,9 @@ export function newWindow(
     const session = sessions.get(uid);
     if (session) {
       session.resize({cols, rows});
+      if (stateManager) {
+        stateManager.updateSession(uid, {cols, rows});
+      }
     }
   });
   rpc.on('data', ({uid, data, escaped}) => {

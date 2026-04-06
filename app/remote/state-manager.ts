@@ -10,6 +10,8 @@ export interface TerminalSessionInfo {
   pid: number | null;
   cwd?: string;
   profile?: string;
+  cols?: number;
+  rows?: number;
   createdAt: number;
 }
 
@@ -110,6 +112,13 @@ export class TerminalStateManager extends EventEmitter {
 
   getSession(uid: string): TerminalSessionInfo | undefined {
     return this.sessions.get(uid);
+  }
+
+  updateSession(uid: string, changes: Partial<TerminalSessionInfo>) {
+    const session = this.sessions.get(uid);
+    if (!session) return;
+    Object.assign(session, changes);
+    this.emit('session_updated', {uid, changes});
   }
 
   private adjustBufferTiers() {
