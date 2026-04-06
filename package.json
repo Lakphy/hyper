@@ -3,11 +3,16 @@
   "version": "4.0.0-canary.5",
   "repository": "zeit/hyper",
   "scripts": {
-    "start": "echo 'please run `pnpm run dev` in one tab and then `pnpm run app` in another one'",
+    "start": "echo 'Run pnpm run dev, then pnpm run app in another terminal (dev prepares remote-ui + tsc once, then starts all watchers).'",
     "app": "cross-env ELECTRONMON_LOGLEVEL=error electronmon target",
-    "dev": "concurrently -n \"Vite,TypeScript,AppFiles\" -c \"cyan.bold,blue.bold,magenta.bold\" \"vite build --watch\" \"tsc --build -v --pretty --watch --preserveWatchOutput\" \"pnpm run copy-app-files:watch\" -k",
-    "build": "pnpm run copy-app-files && cross-env NODE_ENV=production vite build && vite build --config vite.config.cli.ts && pnpm run build:remote-ui && tsc -b -v",
+    "dev:prepare": "pnpm run copy-app-files && pnpm run build:remote-ui && tsc -b -v",
+    "dev": "pnpm run dev:prepare && concurrently -n \"Vite,TypeScript,RemoteUI,AppFiles\" -c \"cyan.bold,blue.bold,green.bold,magenta.bold\" \"cross-env NODE_ENV=development vite build --watch\" \"tsc --build -v --pretty --watch --preserveWatchOutput\" \"cross-env NODE_ENV=development vite build --config vite.config.remote.ts --watch\" \"pnpm run copy-app-files:watch\" -k",
+    "build:renderer": "cross-env NODE_ENV=production vite build",
+    "build:cli": "vite build --config vite.config.cli.ts",
+    "build:compile": "tsc -b -v",
     "build:remote-ui": "vite build --config vite.config.remote.ts",
+    "build": "pnpm run copy-app-files && pnpm run build:renderer && pnpm run build:cli && pnpm run build:remote-ui && pnpm run build:compile",
+    "build:dev": "pnpm run copy-app-files && cross-env NODE_ENV=development vite build && cross-env NODE_ENV=development vite build --config vite.config.cli.ts && pnpm run build:remote-ui && pnpm run build:compile",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.json",
     "test": "pnpm run lint && pnpm run test:unit",
     "test:unit": "ava",
@@ -138,6 +143,11 @@
     "typescript": "5.4.5",
     "vite": "^8.0.4",
     "vite-plugin-static-copy": "^4.0.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/color-convert": "2.0.4"
+    }
   },
   "electronmon": {
     "patterns": [

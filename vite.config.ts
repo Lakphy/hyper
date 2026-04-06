@@ -8,41 +8,42 @@ import {viteStaticCopy} from 'vite-plugin-static-copy';
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProd = nodeEnv === 'production';
+const rendererRuntimeNodeModulesPath = isProd ? '../node_modules' : '../../node_modules';
 
 // These modules must resolve from `target/node_modules` at runtime so Electron
 // uses the same dependency instances the main process copied into the app.
 const rendererExternalPaths: Record<string, string> = {
   electron: 'electron',
-  'color-convert': '../node_modules/color-convert/index.js',
-  'color-string': '../node_modules/color-string/index.js',
-  columnify: '../node_modules/columnify/columnify.js',
-  lodash: '../node_modules/lodash/lodash.js',
-  ms: '../node_modules/ms/index.js',
-  'normalize-url': '../node_modules/normalize-url/index.js',
-  'parse-url': '../node_modules/parse-url/dist/index.js',
-  'php-escape-shell': '../node_modules/php-escape-shell/php-escape-shell.js',
-  plist: '../node_modules/plist/index.js',
-  react: '../node_modules/react/index.js',
-  'react/jsx-runtime': '../node_modules/react/jsx-runtime.js',
-  'react/jsx-dev-runtime': '../node_modules/react/jsx-dev-runtime.js',
-  'react-dom': '../node_modules/react-dom/index.js',
-  'react-dom/client': '../node_modules/react-dom/client.js',
-  'react-redux': '../node_modules/react-redux/lib/index.js',
-  'redux-thunk': '../node_modules/redux-thunk/lib/index.js',
-  redux: '../node_modules/redux/lib/redux.js',
-  reselect: '../node_modules/reselect/lib/index.js',
-  'seamless-immutable': '../node_modules/seamless-immutable/src/seamless-immutable.js',
-  stylis: '../node_modules/stylis/stylis.js',
-  '@xterm/addon-unicode11': '../node_modules/@xterm/addon-unicode11/lib/addon-unicode11.js',
-  args: '../node_modules/args/lib/index.js',
-  mousetrap: '../node_modules/mousetrap/mousetrap.js',
-  open: '../node_modules/open/index.js',
-  '@xterm/addon-fit': '../node_modules/@xterm/addon-fit/lib/addon-fit.js',
-  '@xterm/addon-image': '../node_modules/@xterm/addon-image/lib/addon-image.js',
-  '@xterm/addon-search': '../node_modules/@xterm/addon-search/lib/addon-search.js',
-  '@xterm/addon-web-links': '../node_modules/@xterm/addon-web-links/lib/addon-web-links.js',
-  '@xterm/addon-webgl': '../node_modules/@xterm/addon-webgl/lib/addon-webgl.js',
-  '@xterm/xterm': '../node_modules/@xterm/xterm/lib/xterm.js'
+  'color-convert': `${rendererRuntimeNodeModulesPath}/color-convert/index.js`,
+  'color-string': `${rendererRuntimeNodeModulesPath}/color-string/index.js`,
+  columnify: `${rendererRuntimeNodeModulesPath}/columnify/columnify.js`,
+  lodash: `${rendererRuntimeNodeModulesPath}/lodash/lodash.js`,
+  ms: `${rendererRuntimeNodeModulesPath}/ms/index.js`,
+  'normalize-url': `${rendererRuntimeNodeModulesPath}/normalize-url/index.js`,
+  'parse-url': `${rendererRuntimeNodeModulesPath}/parse-url/dist/index.js`,
+  'php-escape-shell': `${rendererRuntimeNodeModulesPath}/php-escape-shell/php-escape-shell.js`,
+  plist: `${rendererRuntimeNodeModulesPath}/plist/index.js`,
+  react: `${rendererRuntimeNodeModulesPath}/react/index.js`,
+  'react/jsx-runtime': `${rendererRuntimeNodeModulesPath}/react/jsx-runtime.js`,
+  'react/jsx-dev-runtime': `${rendererRuntimeNodeModulesPath}/react/jsx-dev-runtime.js`,
+  'react-dom': `${rendererRuntimeNodeModulesPath}/react-dom/index.js`,
+  'react-dom/client': `${rendererRuntimeNodeModulesPath}/react-dom/client.js`,
+  'react-redux': `${rendererRuntimeNodeModulesPath}/react-redux/lib/index.js`,
+  'redux-thunk': `${rendererRuntimeNodeModulesPath}/redux-thunk/lib/index.js`,
+  redux: `${rendererRuntimeNodeModulesPath}/redux/lib/redux.js`,
+  reselect: `${rendererRuntimeNodeModulesPath}/reselect/lib/index.js`,
+  'seamless-immutable': `${rendererRuntimeNodeModulesPath}/seamless-immutable/src/seamless-immutable.js`,
+  stylis: `${rendererRuntimeNodeModulesPath}/stylis/stylis.js`,
+  '@xterm/addon-unicode11': `${rendererRuntimeNodeModulesPath}/@xterm/addon-unicode11/lib/addon-unicode11.js`,
+  args: `${rendererRuntimeNodeModulesPath}/args/lib/index.js`,
+  mousetrap: `${rendererRuntimeNodeModulesPath}/mousetrap/mousetrap.js`,
+  open: `${rendererRuntimeNodeModulesPath}/open/index.js`,
+  '@xterm/addon-fit': `${rendererRuntimeNodeModulesPath}/@xterm/addon-fit/lib/addon-fit.js`,
+  '@xterm/addon-image': `${rendererRuntimeNodeModulesPath}/@xterm/addon-image/lib/addon-image.js`,
+  '@xterm/addon-search': `${rendererRuntimeNodeModulesPath}/@xterm/addon-search/lib/addon-search.js`,
+  '@xterm/addon-web-links': `${rendererRuntimeNodeModulesPath}/@xterm/addon-web-links/lib/addon-web-links.js`,
+  '@xterm/addon-webgl': `${rendererRuntimeNodeModulesPath}/@xterm/addon-webgl/lib/addon-webgl.js`,
+  '@xterm/xterm': `${rendererRuntimeNodeModulesPath}/@xterm/xterm/lib/xterm.js`
 };
 
 // Node.js builtins used in Electron renderer (nodeIntegration: true)
