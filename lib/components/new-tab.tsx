@@ -124,7 +124,7 @@ const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, 
           position: relative;
           text-align: center;
           -webkit-user-select: none;
-          ${isMac ? '-webkit-app-region: drag;' : ''}
+          -webkit-app-region: no-drag;
           top: '0px';
         }
 

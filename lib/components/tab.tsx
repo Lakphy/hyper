@@ -52,6 +52,7 @@ const Tab = forwardRef<HTMLLIElement, TabProps>((props, ref) => {
       <style jsx>{`
         .tab_tab {
           color: #ccc;
+          -webkit-app-region: no-drag;
           border-color: #ccc;
           border-bottom-width: 1px;
           border-bottom-style: solid;
