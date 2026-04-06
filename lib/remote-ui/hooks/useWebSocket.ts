@@ -80,6 +80,13 @@ export function useWebSocket(token: string) {
               sessionDataBus.dispatchEvent(
                 new SessionDataEvent(message.payload.uid, message.payload.data)
               );
+              dispatch({
+                type: 'HISTORY_CHUNK_RECEIVED',
+                payload: {uid: message.payload.uid, chunk: message.payload.chunk, total: message.payload.total}
+              });
+              if (message.payload.chunk >= message.payload.total - 1) {
+                dispatch({type: 'HISTORY_COMPLETE', payload: {uid: message.payload.uid}});
+              }
               break;
             case 'error':
               dispatch({type: 'SET_ERROR', payload: message.payload.message});

@@ -1011,6 +1011,12 @@ Phase 2 Web UI 相关测试（共 36 个测试用例）：
 | BinaryProtocol (Browser) | `binary-protocol-browser.test.ts` | 14 | 浏览器端 ArrayBuffer 解码、多消息拼接、截断处理、与服务端编码器兼容性 |
 | RemoteStore (Reducer) | `remote-store.test.ts` | 22 | 所有 action 分支、快照/增删会话、活跃会话自动切换、连接状态、错误处理 |
 
+Phase 3 Web UI 功能测试（共 16 个测试用例）：
+
+| 模块 | 测试文件 | 用例数 | 覆盖范围 |
+| ---- | -------- | ------ | -------- |
+| RemoteStore Phase3 | `remote-store-phase3.test.ts` | 16 | 布局模式切换、历史分块进度追踪、窗口折叠/展开、会话移除清理历史状态、初始状态验证 |
+
 ### 测试设计原则
 
 1. **纯单元测试**: 每个组件独立测试，无外部依赖（无 Electron、无网络）
@@ -1061,12 +1067,12 @@ npx ava test/unit/circular-buffer.test.ts test/unit/binary-protocol.test.ts test
 - [x] 服务端静态文件服务集成
 - [x] 单元测试覆盖（36 个用例）
 
-### Phase 3: 完整功能 (Week 3)
+### Phase 3: 完整功能 (Week 3) ✅
 
-- [ ] 多终端网格/标签布局
-- [ ] 窗口/Tab 层级显示
-- [ ] 远程输入功能
-- [ ] 历史输出回放
+- [x] 多终端网格/标签布局
+- [x] 窗口/Tab 层级显示
+- [x] 远程输入功能
+- [x] 历史输出回放
 
 ### Phase 4: 优化和安全 (Week 4)
 

@@ -23,7 +23,7 @@ export type WSServerMessage =
   | {type: 'snapshot'; payload: {sessions: TerminalSessionInfo[]; windows: WindowInfo[]}}
   | {type: 'session_added'; payload: TerminalSessionInfo}
   | {type: 'session_removed'; payload: {uid: string}}
-  | {type: 'session_history'; payload: {uid: string; data: string; chunkIndex: number; totalChunks: number}}
+  | {type: 'session_history'; payload: {uid: string; data: string; chunk: number; total: number}}
   | {type: 'error'; payload: {message: string}};
 
 // Messages sent by the client

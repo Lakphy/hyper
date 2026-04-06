@@ -11,6 +11,9 @@ function makeState(overrides: Partial<RemoteState> = {}): RemoteState {
     activeSessionUid: null,
     connectionStatus: 'connecting',
     lastError: null,
+    layoutMode: 'tabs',
+    historyLoading: {},
+    collapsedWindows: {},
     ...overrides
   };
 }
