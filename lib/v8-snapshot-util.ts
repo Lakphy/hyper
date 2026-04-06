@@ -1,5 +1,7 @@
 if (typeof snapshotResult !== 'undefined') {
-  const Module = __non_webpack_require__('module');
+  // Use native Node.js require (not intercepted by bundler)
+  // In webpack this was __non_webpack_require__, in Vite CJS output require is native
+  const Module = globalThis.require('module');
   const originalLoad: (module: string, ...args: any[]) => any = Module._load;
 
   Module._load = function _load(module: string, ...args: unknown[]): NodeModule {

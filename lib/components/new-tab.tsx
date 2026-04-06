@@ -13,8 +13,6 @@ interface Props {
   borderColor: string;
   tabsVisible: boolean;
 }
-const isMac = /Mac/.test(navigator.userAgent);
-
 const DropdownButton = ({defaultProfile, profiles, openNewTab, backgroundColor, borderColor, tabsVisible}: Props) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const ref = useRef(null);

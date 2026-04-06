@@ -19,8 +19,6 @@ declare global {
     };
     setGlobals(global: any, process: any, window: any, document: any, console: any, require: any): void;
   };
-
-  const __non_webpack_require__: NodeRequire;
 }
 
 export type ITermGroup = Immutable<{
@@ -403,4 +401,6 @@ export type Mutable<T> = T extends Immutable<infer U> ? (Exclude<U, T> extends n
 
 export type immutableRecord<T> = {[k in keyof T]: Immutable<T[k]>};
 
-export type Assignable<T, U> = {[k in keyof U]: k extends keyof T ? T[k] : U[k]} & Partial<T>;
+export type Assignable<T, U> = {
+  [k in keyof U]: k extends keyof T ? T[k] : U[k];
+} & Partial<T>;
