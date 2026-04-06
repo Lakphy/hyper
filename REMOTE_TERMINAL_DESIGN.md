@@ -985,27 +985,79 @@ export const defaults: configOptions = {
 };
 ```
 
+## 6.5 测试策略
+
+### 测试框架
+
+沿用项目现有的 AVA 测试框架，测试文件位于 `test/unit/` 目录，遵循 `*.test.ts` 命名规范。
+
+### 单元测试覆盖
+
+所有 Phase 1 核心组件均有完整的单元测试（共 71 个测试用例）：
+
+| 模块 | 测试文件 | 用例数 | 覆盖范围 |
+| ---- | -------- | ------ | -------- |
+| CircularBuffer | `circular-buffer.test.ts` | 10 | 容量管理、溢出丢弃、resize、边界条件 |
+| BinaryProtocol | `binary-protocol.test.ts` | 13 | 编解码往返、header 格式、Unicode/ANSI、大数据、类型判断 |
+| WSDataBatcher | `ws-data-batcher.test.ts` | 7 | 单条/多条 flush、定时器触发、超阈值自动 flush、destroy 清理 |
+| SubscriptionManager | `subscription-manager.test.ts` | 12 | 订阅/取消订阅、去重、多客户端交叉订阅、客户端移除 |
+| AdaptiveThrottler | `adaptive-throttler.test.ts` | 11 | 三级阈值判定、窗口重置、独立 session 追踪、summarize 截断、累积计算 |
+| TerminalStateManager | `state-manager.test.ts` | 18 | 注册/注销、窗口分组、事件触发、历史缓冲、destroy 清理 |
+
+### 测试设计原则
+
+1. **纯单元测试**: 每个组件独立测试，无外部依赖（无 Electron、无网络）
+2. **边界条件覆盖**: 空输入、超限输入、重复操作、不存在的 ID 等
+3. **异步行为验证**: 定时器触发、窗口过期等时间相关逻辑
+4. **事件驱动验证**: 确认 EventEmitter 在正确时机触发正确事件
+5. **资源清理验证**: destroy/clear 后状态完全重置，无内存泄漏
+
+### 运行测试
+
+```bash
+# 运行所有单元测试
+pnpm run test:unit
+
+# 运行远程终端相关测试
+npx ava test/unit/circular-buffer.test.ts test/unit/binary-protocol.test.ts test/unit/subscription-manager.test.ts test/unit/adaptive-throttler.test.ts test/unit/ws-data-batcher.test.ts test/unit/state-manager.test.ts
+```
+
+### 后续测试计划
+
+| 阶段 | 测试类型 | 内容 |
+| ---- | -------- | ---- |
+| Phase 2 | 集成测试 | WebSocket 连接建立、认证流程、消息收发 |
+| Phase 3 | 组件测试 | Web UI React 组件渲染、交互 |
+| Phase 4 | E2E 测试 | 完整流程：启动 App → 打开浏览器 → 查看终端 → 输入交互 |
+| Phase 4 | 性能测试 | 多终端并发、高频输出、内存占用基准 |
+
 ## 七、实现路线图
 
-### Phase 1: 核心基础设施 (Week 1)
-- [ ] 实现 TerminalStateManager
-- [ ] 实现 WebSocket 服务器基础框架
-- [ ] 集成到 app/index.ts 和 app/ui/window.ts
-- [ ] 基础配置系统
+### Phase 1: 核心基础设施 (Week 1) ✅
+
+- [x] 实现 TerminalStateManager
+- [x] 实现 WebSocket 服务器基础框架
+- [x] 集成到 app/index.ts 和 app/ui/window.ts
+- [x] 基础配置系统
+- [x] 性能优化组件（二进制协议、批处理、选择性广播、自适应节流、循环缓冲区）
+- [x] 单元测试覆盖
 
 ### Phase 2: Web UI 基础 (Week 2)
+
 - [ ] 搭建 Web UI 项目结构
 - [ ] 实现 WebSocket 客户端连接
 - [ ] 复用 Term 组件显示单个终端
 - [ ] 基础布局和样式
 
 ### Phase 3: 完整功能 (Week 3)
+
 - [ ] 多终端网格/标签布局
 - [ ] 窗口/Tab 层级显示
 - [ ] 远程输入功能
 - [ ] 历史输出回放
 
 ### Phase 4: 优化和安全 (Week 4)
+
 - [ ] 性能优化（数据压缩、批处理）
 - [ ] 令牌认证系统
 - [ ] 错误处理和重连机制
