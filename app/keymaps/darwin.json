@@ -1,5 +1,8 @@
 {
-  "window:devtools": "command+alt+i",
+  "window:devtools": [
+    "f12",
+    "command+alt+i"
+  ],
   "window:reload": "command+shift+r",
   "window:reloadFull": "command+shift+f5",
   "window:preferences": "command+,",

@@ -50,13 +50,22 @@ export function newWindow(
     webPreferences: {
       nodeIntegration: true,
       navigateOnDragDrop: true,
-      contextIsolation: false
+      contextIsolation: false,
+      // Ensure DevTools can be opened in production (e.g. via F12); plugins may still override via decorateBrowserOptions.
+      devTools: true
     },
     ...options_
   };
   const window = new BrowserWindow(app.plugins.getDecoratedBrowserOptions(winOpts));
 
   window.profileName = profileName;
+
+  window.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown' && input.key?.toLowerCase() === 'f12') {
+      event.preventDefault();
+      execCommand('window:devtools', window);
+    }
+  });
 
   // Enable remote module on this window
   remoteEnable(window.webContents);
