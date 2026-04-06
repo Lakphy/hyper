@@ -57,8 +57,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       node-pty:
-        specifier: 1.2.0-beta.11
-        version: 1.2.0-beta.11
+        specifier: 1.2.0-beta.12
+        version: 1.2.0-beta.12
       os-locale:
         specifier: 5.0.0
         version: 5.0.0
@@ -607,8 +607,8 @@ packages:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
     hasBin: true
 
-  node-pty@1.2.0-beta.11:
-    resolution: {integrity: sha512-THcUyu1WwdgoIyUvgXOZ70EOMXzheGa0q3tbEb5kUIfKgcpBJ+AJ9Q1kq0bKtYmQzr77usXiTORZTLmAUQlnoQ==}
+  node-pty@1.2.0-beta.12:
+    resolution: {integrity: sha512-uExTCG/4VmSJa4+TjxFwPXv8BfacmfFEBL6JpxCMDghcwqzvD0yTcGmZ1fKOK6HY33tp0CelLblqTECJizc+Yw==}
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -1484,7 +1484,7 @@ snapshots:
   node-gyp-build@4.8.4:
     optional: true
 
-  node-pty@1.2.0-beta.11:
+  node-pty@1.2.0-beta.12:
     dependencies:
       node-addon-api: 7.1.1
 

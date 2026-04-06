@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@electron/remote':
-        specifier: 2.1.2
-        version: 2.1.2(electron@40.8.0)
+        specifier: 2.1.3
+        version: 2.1.3(electron@41.1.1)
       '@react-icons/all-files':
         specifier: 4.1.0
         version: 4.1.0(react@18.2.0)
@@ -235,8 +235,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       electron:
-        specifier: ^40.0.0
-        version: 40.8.0
+        specifier: ^41.1.1
+        version: 41.1.1
       electron-builder:
         specifier: ^26.8.1
         version: 26.8.1(electron-builder-squirrel-windows@26.8.1)
@@ -244,8 +244,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       electron-mksnapshot:
-        specifier: ~40.0.0
-        version: 40.0.0
+        specifier: 41.0.4
+        version: 41.0.4
       electronmon:
         specifier: ^2.0.2
         version: 2.0.4
@@ -632,8 +632,8 @@ packages:
     engines: {node: '>=22.12.0'}
     hasBin: true
 
-  '@electron/remote@2.1.2':
-    resolution: {integrity: sha512-EPwNx+nhdrTBxyCqXt/pftoQg/ybtWDW3DUWHafejvnB1ZGGfMpv6e15D8KeempocjXe78T7WreyGGb3mlZxdA==}
+  '@electron/remote@2.1.3':
+    resolution: {integrity: sha512-XlpxC8S4ttj/v2d+PKp9na/3Ev8bV7YWNL7Cw5b9MAWgTphEml7iYgbc7V0r9D6yDOfOkj06bchZgOZdlWJGNA==}
     peerDependencies:
       electron: '>= 13.0.0'
 
@@ -2037,8 +2037,8 @@ packages:
   electron-link@0.6.0:
     resolution: {integrity: sha512-sSxU9c7ABIH8csvAveTwgrG5g7Nbcuh/MBPF5exeWgzd0RLJYNWuD66eMpPRo9/qwqyPc8FJvHRF7EIN5Ylqqg==}
 
-  electron-mksnapshot@40.0.0:
-    resolution: {integrity: sha512-WddpMXCkpBwsSdwRLHZsEUftif4I03UpBYNyV6JK8z4PT/Fc1LmjJWbD8t4fj0JnKJRY2vgFk2k97eSErCQxMA==}
+  electron-mksnapshot@41.0.4:
+    resolution: {integrity: sha512-AtVf62HbQhOh0UrVOjhcyqNqxLNEd3q5JjeA9Idx/TA8NdjOiaOg3yKx5OGJ6paEy1RZR8noAXI5zJX9I/Xcbg==}
     engines: {node: '>=10.5.0'}
     hasBin: true
 
@@ -2052,8 +2052,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@40.8.0:
-    resolution: {integrity: sha512-WoPq0Nr9Yx3g7T6VnJXdwa/rr2+VRyH3a+K+ezfMKBlf6WjxE/LmhMQabKbb6yjm9RbZhJBRcYyoLph421O2mQ==}
+  electron@41.1.1:
+    resolution: {integrity: sha512-8bgvDhBjli+3Z2YCKgzzoBPh6391pr7Xv2h/tTJG4ETgvPvUxZomObbZLs31mUzYb6VrlcDDd9cyWyNKtPm3tA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -5411,9 +5411,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/remote@2.1.2(electron@40.8.0)':
+  '@electron/remote@2.1.3(electron@41.1.1)':
     dependencies:
-      electron: 40.8.0
+      electron: 41.1.1
 
   '@electron/universal@2.0.3':
     dependencies:
@@ -7055,7 +7055,7 @@ snapshots:
       resolve: 1.22.11
       source-map: 0.7.6
 
-  electron-mksnapshot@40.0.0:
+  electron-mksnapshot@41.0.4:
     dependencies:
       '@electron/get': 2.0.3
       extract-zip: 2.0.1
@@ -7091,7 +7091,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@40.8.0:
+  electron@41.1.1:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.12.0
