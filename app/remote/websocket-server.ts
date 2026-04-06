@@ -105,10 +105,13 @@ export class RemoteTerminalServer {
     this.app.use((req, res, next) => {
       if (!this.authToken) return next();
       if (req.path === '/health') return next();
+      // Static assets (JS/CSS bundles) don't contain sensitive data;
+      // skip auth so that crossorigin script/link tags work without cookies.
+      if (req.path.startsWith('/assets/')) return next();
 
       const token = (req.query.token as string) || this.parseCookies(req.headers.cookie)?.token;
       if (token === this.authToken) {
-        // Set cookie so subsequent asset requests don't need ?token
+        // Set cookie so subsequent page navigations don't need ?token
         if (!this.parseCookies(req.headers.cookie)?.token) {
           res.cookie('token', token, {httpOnly: true, sameSite: 'strict', maxAge: 86400000});
         }

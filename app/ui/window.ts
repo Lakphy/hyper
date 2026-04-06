@@ -79,8 +79,8 @@ export function newWindow(
   const rpc = createRPC(window);
   const sessions = new Map<string, Session>();
 
-  // Get remote state manager if available
-  const stateManager: TerminalStateManager | undefined = (window as any).remoteStateManager;
+  // Get remote state manager if available (read lazily since it's set after newWindow returns)
+  const getStateManager = (): TerminalStateManager | undefined => (window as any).remoteStateManager;
 
   window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     console.error('Renderer failed to load', {errorCode, errorDescription, validatedURL});
@@ -208,6 +208,7 @@ export function newWindow(
     sessions.set(options.uid, session);
 
     // Register session with remote state manager
+    const stateManager = getStateManager();
     if (stateManager) {
       stateManager.registerSession({
         uid: options.uid,
@@ -237,9 +238,11 @@ export function newWindow(
 
     session.on('data', (data: string) => {
       rpc.emit('session data', data);
-      // Forward data to remote state manager
-      if (stateManager) {
-        stateManager.onSessionData(options.uid, data);
+      // Forward data to remote state manager.
+      // data is prefixed with the 36-char uid (DataBatcher format), strip it before forwarding.
+      const sm = getStateManager();
+      if (sm) {
+        sm.onSessionData(options.uid, data.slice(36));
       }
     });
 
@@ -247,8 +250,9 @@ export function newWindow(
       rpc.emit('session exit', {uid: options.uid});
       unsetRendererType(options.uid);
       // Unregister from remote state manager
-      if (stateManager) {
-        stateManager.unregisterSession(options.uid);
+      const sm = getStateManager();
+      if (sm) {
+        sm.unregisterSession(options.uid);
       }
       sessions.delete(options.uid);
     });
@@ -262,21 +266,31 @@ export function newWindow(
   });
 
   // Handle remote input from WebSocket clients
-  if (stateManager) {
-    stateManager.on('remote_input', ({uid, data}: {uid: string; data: string}) => {
+  // Deferred setup: stateManager is assigned after newWindow returns,
+  // so we set up listeners once it becomes available.
+  let remoteListenersAttached = false;
+  const setupRemoteListeners = () => {
+    if (remoteListenersAttached) return;
+    const sm = getStateManager();
+    if (!sm) return;
+    remoteListenersAttached = true;
+    sm.on('remote_input', ({uid, data}: {uid: string; data: string}) => {
       const session = sessions.get(uid);
       if (session) {
         session.write(data);
       }
     });
 
-    stateManager.on('remote_resize', ({uid, cols, rows}: {uid: string; cols: number; rows: number}) => {
+    sm.on('remote_resize', ({uid, cols, rows}: {uid: string; cols: number; rows: number}) => {
       const session = sessions.get(uid);
       if (session) {
         session.resize({cols, rows});
       }
     });
-  }
+  };
+  // Try immediately, then retry after a short delay to catch the deferred assignment
+  setupRemoteListeners();
+  setTimeout(setupRemoteListeners, 100);
 
   rpc.on('unmaximize', () => {
     window.unmaximize();
@@ -291,8 +305,9 @@ export function newWindow(
     const session = sessions.get(uid);
     if (session) {
       session.resize({cols, rows});
-      if (stateManager) {
-        stateManager.updateSession(uid, {cols, rows});
+      const sm = getStateManager();
+      if (sm) {
+        sm.updateSession(uid, {cols, rows});
       }
     }
   });
