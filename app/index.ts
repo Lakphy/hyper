@@ -77,26 +77,69 @@ if (isDev) {
 const url = `file://${resolve(isDev ? __dirname : app.getAppPath(), 'index.html')}`;
 console.log('electron will open', url);
 
+const recoverableDevtoolsErrors = [
+  /Invalid header: Does not start with Cr24/i,
+  /response code \d{3}/i,
+  /net::ERR_/i,
+  /failed to fetch/i,
+  /extension is invalid/i,
+  /manifest/i
+];
+
+const getDevtoolsErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+const isRecoverableDevtoolsError = (error: unknown) => {
+  const message = getDevtoolsErrorMessage(error);
+  return recoverableDevtoolsErrors.some((pattern) => pattern.test(message));
+};
+
 async function installDevExtensions(isDev_: boolean) {
   if (!isDev_) {
     return [];
   }
   const {default: installer, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS} = await import('electron-devtools-installer');
 
-  const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS];
+  const extensions = [
+    {id: REACT_DEVELOPER_TOOLS, name: 'React Developer Tools'},
+    {id: REDUX_DEVTOOLS, name: 'Redux DevTools'}
+  ];
   const forceDownload = Boolean(process.env.UPGRADE_EXTENSIONS);
+  const installedExtensions: string[] = [];
 
-  return Promise.all(
-    extensions.map((extension) => installer(extension, {forceDownload, loadExtensionOptions: {allowFileAccess: true}}))
+  await Promise.all(
+    extensions.map(async ({id, name}) => {
+      try {
+        installedExtensions.push(
+          await installer(id, {
+            forceDownload,
+            loadExtensionOptions: {allowFileAccess: true}
+          })
+        );
+      } catch (error) {
+        const message = getDevtoolsErrorMessage(error);
+
+        if (isRecoverableDevtoolsError(error)) {
+          console.warn(`[devtools] Skipping ${name}: ${message}`);
+          return;
+        }
+
+        console.error(`[devtools] Failed to load ${name}`, error);
+      }
+    })
   );
+
+  return installedExtensions;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.on('ready', async () => {
   try {
-    await installDevExtensions(isDev);
+    const installedExtensions = await installDevExtensions(isDev);
+    if (installedExtensions.length > 0) {
+      console.log('[devtools] Loaded extensions:', installedExtensions.join(', '));
+    }
   } catch (err) {
-    console.error('Error while loading devtools extensions', err);
+    console.error('[devtools] Unexpected failure while preparing extensions', err);
   }
 
   function createWindow(

@@ -158,6 +158,9 @@ const Header = forwardRef<HTMLElement, HeaderProps>((props, ref) => {
         }
 
         .header_headerRounded {
+          top: 0;
+          left: 0;
+          right: 0;
           border-top-left-radius: 4px;
           border-top-right-radius: 4px;
         }

@@ -92,7 +92,7 @@ const Hyper = forwardRef<HTMLDivElement, HyperProps>((props, ref) => {
   }, []);
 
   const {isMac: isMac_, customCSS, uiFontFamily, borderColor, maximized, fullScreen} = props;
-  const borderWidth = isMac_ ? '' : `${maximized ? '0' : '1'}px`;
+  const borderWidth = isMac_ ? '0' : `${maximized ? '0' : '1'}px`;
   stylis.set({prefix: false});
   return (
     <div id="hyper" ref={ref}>
@@ -121,8 +121,15 @@ const Hyper = forwardRef<HTMLDivElement, HyperProps>((props, ref) => {
           }
 
           .hyper_mainRounded {
-            border-radius: 10.5px;
+            border-radius: 10px;
+            corner-shape: squircle;
             overflow: hidden;
+            border: 0;
+          }
+
+          .fullScreen {
+            border-radius: 0;
+            border: 0;
           }
         `}
       </style>
