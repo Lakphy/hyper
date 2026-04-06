@@ -15,6 +15,8 @@ import * as termGroupActions from './actions/term-groups';
 import * as uiActions from './actions/ui';
 import * as updaterActions from './actions/updater';
 import HyperContainer from './containers/hyper';
+import {PlatformProvider} from './platform-context';
+import {electronPlatform} from './platform-electron';
 import rpc from './rpc';
 import configureStore from './store/configure-store';
 import * as config from './utils/config';
@@ -236,9 +238,11 @@ rpc.on('leave full screen', () => {
 const root = createRoot(document.getElementById('mount')!);
 
 root.render(
-  <Provider store={store_}>
-    <HyperContainer />
-  </Provider>
+  <PlatformProvider value={electronPlatform}>
+    <Provider store={store_}>
+      <HyperContainer />
+    </Provider>
+  </PlatformProvider>
 );
 
 rpc.on('reload', () => {

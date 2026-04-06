@@ -1,5 +1,6 @@
 import {createServer} from 'http';
 import * as crypto from 'crypto';
+import * as path from 'path';
 import express from 'express';
 import {WebSocketServer, WebSocket} from 'ws';
 import type {IncomingMessage} from 'http';
@@ -79,16 +80,19 @@ export class RemoteTerminalServer {
   }
 
   private setupRoutes() {
+    // Serve Web UI static files
+    const remoteUiPath = path.resolve(__dirname, '..', 'remote-ui');
+    this.app.use(express.static(remoteUiPath));
+
     // Health check
     this.app.get('/health', (_req, res) => {
       res.json({status: 'ok', sessions: this.stateManager.getAllSessions().length});
     });
 
-    // Serve Web UI (will be implemented in Phase 2)
-    // this.app.use(express.static('target/remote-ui'));
-    // this.app.get('/', (req, res) => {
-    //   res.sendFile('target/remote-ui/index.html');
-    // });
+    // SPA fallback — serve index.html for any non-API, non-asset route
+    this.app.get('*', (_req, res) => {
+      res.sendFile(path.join(remoteUiPath, 'index.html'));
+    });
   }
 
   private setupWebSocket() {

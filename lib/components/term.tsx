@@ -1,4 +1,3 @@
-import {clipboard, shell} from 'electron';
 import React from 'react';
 
 import {FitAddon} from '@xterm/addon-fit';
@@ -16,17 +15,14 @@ import isEqual from 'lodash/isEqual';
 import pickBy from 'lodash/pickBy';
 
 import type {TermProps} from '../../typings/hyper';
-import terms from '../terms';
-import processClipboard from '../utils/paste';
-import {decorate} from '../utils/plugins';
+import {PlatformContext} from '../platform-context';
+import type {PlatformAPI} from '../platform-context';
 
 import _SearchBox from './searchBox';
 
 import '@xterm/xterm/css/xterm.css';
 
-const SearchBox = decorate(_SearchBox, 'SearchBox');
-
-const isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform) || process.platform === 'win32';
+// SearchBox decoration is deferred to componentDidMount where platform context is available
 
 // map old hterm constants to xterm.js
 const CURSOR_STYLES = {
@@ -65,7 +61,7 @@ const getTermOptions = (props: TermProps): ITerminalOptions => {
     letterSpacing: props.letterSpacing,
     allowTransparency: needTransparency,
     macOptionClickForcesSelection: props.macOptionSelectionMode === 'force',
-    ...(isWindows && props.windowsPty && {windowsPty: props.windowsPty}),
+    ...(props.windowsPty && {windowsPty: props.windowsPty}),
     theme: {
       foreground: props.foregroundColor,
       background: backgroundColor,
@@ -111,6 +107,8 @@ export default class Term extends React.PureComponent<
       | undefined;
   }
 > {
+  static contextType = PlatformContext;
+  declare context: PlatformAPI;
   termRef: HTMLElement | null;
   termWrapperRef: HTMLElement | null;
   termOptions: ITerminalOptions;
@@ -119,6 +117,7 @@ export default class Term extends React.PureComponent<
   bellSound: HTMLAudioElement | null;
   fitAddon: FitAddon;
   searchAddon: SearchAddon;
+  SearchBox: any;
   static rendererTypes: Record<string, string>;
   term!: Terminal;
   resizeObserver!: ResizeObserver;
@@ -154,18 +153,20 @@ export default class Term extends React.PureComponent<
   }
 
   // The main process shows this in the About dialog
-  static reportRenderer(uid: string, type: string) {
+  static reportRenderer(uid: string, type: string, platform: PlatformAPI) {
     const rendererTypes = Term.rendererTypes || {};
     if (rendererTypes[uid] !== type) {
       rendererTypes[uid] = type;
       Term.rendererTypes = rendererTypes;
-      window.rpc.emit('info renderer', {uid, type});
+      platform.reportRenderer(uid, type);
     }
   }
 
   componentDidMount() {
     const {props} = this;
+    const platform = this.context;
 
+    this.SearchBox = platform.decorate(_SearchBox, 'SearchBox');
     this.termOptions = getTermOptions(props);
     this.term = props.term || new Terminal(this.termOptions);
     this.defaultBellSound = new Audio(
@@ -201,7 +202,7 @@ export default class Term extends React.PureComponent<
           useWebGL = true;
         }
       }
-      Term.reportRenderer(props.uid, useWebGL ? 'WebGL' : 'DOM');
+      Term.reportRenderer(props.uid, useWebGL ? 'WebGL' : 'DOM', platform);
 
       const shallActivateWebLink = (event: MouseEvent): boolean => {
         if (!event) return false;
@@ -214,7 +215,7 @@ export default class Term extends React.PureComponent<
       this.term.loadAddon(this.searchAddon);
       this.term.loadAddon(
         new WebLinksAddon((event, uri) => {
-          if (shallActivateWebLink(event)) void shell.openExternal(uri);
+          if (shallActivateWebLink(event)) platform.openExternal(uri);
         })
       );
       this.term.open(this.termRef);
@@ -315,7 +316,7 @@ export default class Term extends React.PureComponent<
       capture: true
     });
 
-    terms[this.props.uid] = this;
+    platform.registerTerm(this.props.uid, this);
   }
 
   getTermDocument() {
@@ -334,7 +335,7 @@ export default class Term extends React.PureComponent<
   onWindowPaste = (e: Event) => {
     if (!this.props.isTermActive) return;
 
-    const processed = processClipboard();
+    const processed = this.context.processClipboard();
     if (processed) {
       e.preventDefault();
       e.stopPropagation();
@@ -345,13 +346,13 @@ export default class Term extends React.PureComponent<
   onMouseUp = (e: React.MouseEvent) => {
     if (this.props.quickEdit && e.button === 2) {
       if (this.term.hasSelection()) {
-        clipboard.writeText(this.term.getSelection());
+        this.context.clipboardWriteText(this.term.getSelection());
         this.term.clearSelection();
       } else {
         document.execCommand('paste');
       }
     } else if (this.props.copyOnSelect && this.term.hasSelection()) {
-      clipboard.writeText(this.term.getSelection());
+      this.context.clipboardWriteText(this.term.getSelection());
     }
   };
 
@@ -489,7 +490,7 @@ export default class Term extends React.PureComponent<
   };
 
   componentWillUnmount() {
-    terms[this.props.uid] = null;
+    this.context.unregisterTerm(this.props.uid);
     this.termWrapperRef?.removeChild(this.termRef!);
     this.props.ref_(this.props.uid, null);
 
@@ -506,13 +507,14 @@ export default class Term extends React.PureComponent<
   }
 
   render() {
+    const DecoratedSearchBox = this.SearchBox || _SearchBox;
     return (
       <div className={`term_fit ${this.props.isTermActive ? 'term_active' : ''}`} onMouseUp={this.onMouseUp}>
         {this.props.customChildrenBefore}
         <div ref={this.onTermWrapperRef} className="term_fit term_wrapper" />
         {this.props.customChildren}
         {this.props.search ? (
-          <SearchBox
+          <DecoratedSearchBox
             next={this.searchNext}
             prev={this.searchPrevious}
             close={this.closeSearchBox}

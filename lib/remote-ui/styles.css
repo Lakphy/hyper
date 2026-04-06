@@ -1,0 +1,172 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background: #0d0d1a;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.window-list {
+  width: 220px;
+  min-width: 220px;
+  background: #12122a;
+  border-right: 1px solid #2a2a4a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.window-list-header {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.window-list-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.window-list-empty {
+  padding: 24px 16px;
+  color: #666;
+  font-size: 13px;
+  text-align: center;
+}
+
+.window-group {
+  margin-bottom: 4px;
+}
+
+.window-title {
+  padding: 6px 16px;
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.session-item:hover {
+  background: rgba(248, 28, 229, 0.08);
+}
+
+.session-item--active {
+  background: rgba(248, 28, 229, 0.15);
+  color: #fff;
+  border-left: 2px solid #f81ce5;
+}
+
+.session-shell {
+  font-family: 'Menlo', 'Consolas', monospace;
+}
+
+.session-pid {
+  font-size: 11px;
+  color: #666;
+  font-family: 'Menlo', 'Consolas', monospace;
+}
+
+/* Main area */
+.main-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.remote-terminal {
+  flex: 1;
+  min-height: 0;
+  padding: 4px;
+}
+
+.no-session {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 16px;
+}
+
+.no-session-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #444;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 16px;
+  background: #12122a;
+  border-top: 1px solid #2a2a4a;
+  font-size: 12px;
+  color: #888;
+}
+
+.status-indicator {
+  font-weight: 500;
+}
+
+.status--connecting { color: #c7c329; }
+.status--connected { color: #1dc121; }
+.status--disconnected { color: #888; }
+.status--error { color: #c51e14; }
+
+.status-error {
+  color: #c51e14;
+  margin-left: auto;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

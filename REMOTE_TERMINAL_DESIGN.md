@@ -1004,6 +1004,13 @@ export const defaults: configOptions = {
 | AdaptiveThrottler | `adaptive-throttler.test.ts` | 11 | 三级阈值判定、窗口重置、独立 session 追踪、summarize 截断、累积计算 |
 | TerminalStateManager | `state-manager.test.ts` | 18 | 注册/注销、窗口分组、事件触发、历史缓冲、destroy 清理 |
 
+Phase 2 Web UI 相关测试（共 36 个测试用例）：
+
+| 模块 | 测试文件 | 用例数 | 覆盖范围 |
+| ---- | -------- | ------ | -------- |
+| BinaryProtocol (Browser) | `binary-protocol-browser.test.ts` | 14 | 浏览器端 ArrayBuffer 解码、多消息拼接、截断处理、与服务端编码器兼容性 |
+| RemoteStore (Reducer) | `remote-store.test.ts` | 22 | 所有 action 分支、快照/增删会话、活跃会话自动切换、连接状态、错误处理 |
+
 ### 测试设计原则
 
 1. **纯单元测试**: 每个组件独立测试，无外部依赖（无 Electron、无网络）
@@ -1026,7 +1033,6 @@ npx ava test/unit/circular-buffer.test.ts test/unit/binary-protocol.test.ts test
 
 | 阶段 | 测试类型 | 内容 |
 | ---- | -------- | ---- |
-| Phase 2 | 集成测试 | WebSocket 连接建立、认证流程、消息收发 |
 | Phase 3 | 组件测试 | Web UI React 组件渲染、交互 |
 | Phase 4 | E2E 测试 | 完整流程：启动 App → 打开浏览器 → 查看终端 → 输入交互 |
 | Phase 4 | 性能测试 | 多终端并发、高频输出、内存占用基准 |
@@ -1042,12 +1048,18 @@ npx ava test/unit/circular-buffer.test.ts test/unit/binary-protocol.test.ts test
 - [x] 性能优化组件（二进制协议、批处理、选择性广播、自适应节流、循环缓冲区）
 - [x] 单元测试覆盖
 
-### Phase 2: Web UI 基础 (Week 2)
+### Phase 2: Web UI 基础 (Week 2) ✅
 
-- [ ] 搭建 Web UI 项目结构
-- [ ] 实现 WebSocket 客户端连接
-- [ ] 复用 Term 组件显示单个终端
-- [ ] 基础布局和样式
+- [x] 搭建 Web UI 项目结构 (`lib/remote-ui/`)
+- [x] 实现 WebSocket 客户端连接 (`useWebSocket` hook + 自动重连)
+- [x] 浏览器端二进制协议解码 (`binary-protocol-browser.ts`)
+- [x] React Context 状态管理 (`remote-store.tsx`)
+- [x] 轻量 xterm.js 浏览器包装组件 (`RemoteTerminal.tsx`)
+- [x] 会话列表侧边栏 (`WindowList.tsx`)
+- [x] 连接状态栏 (`StatusBar.tsx`)
+- [x] 独立 Vite 构建配置 (`vite.config.remote.ts`)
+- [x] 服务端静态文件服务集成
+- [x] 单元测试覆盖（36 个用例）
 
 ### Phase 3: 完整功能 (Week 3)
 
