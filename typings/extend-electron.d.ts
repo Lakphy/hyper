@@ -1,4 +1,5 @@
 import type {Server} from '../app/rpc';
+import type {TerminalStateManager} from '../app/remote/state-manager';
 
 declare global {
   namespace Electron {
@@ -24,6 +25,7 @@ declare global {
       clean: () => void;
       rpc: Server;
       profileName: string;
+      remoteStateManager?: TerminalStateManager;
     }
   }
 }

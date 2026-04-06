@@ -6,6 +6,9 @@
   "directories": {
     "app": "target"
   },
+  "npmArgs": [
+    "--ignore-workspace"
+  ],
   "extraResources": [
     "./bin/yarn-standalone.js",
     "./bin/cli.js",

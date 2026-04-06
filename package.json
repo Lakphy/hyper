@@ -18,11 +18,12 @@
     "rebuild-node-pty": "electron-rebuild -f -o node-pty -m target",
     "dist": "pnpm run build && electron-builder",
     "clean": "node ./bin/rimraf-standalone.js node_modules && node ./bin/rimraf-standalone.js ./app/node_modules && node ./bin/rimraf-standalone.js ./app/renderer",
-    "v8-snapshot": "cross-env npm_config_arch=x64 pnpm run v8-snapshot:arch && cross-env npm_config_arch=arm64 pnpm run v8-snapshot:arch",
+    "prepare-v8-snapshot": "npm --prefix node_modules/leveldown run rebuild && node node_modules/electron/install.js",
+    "v8-snapshot": "pnpm run prepare-v8-snapshot && cross-env npm_config_arch=x64 pnpm run v8-snapshot:arch && cross-env npm_config_arch=arm64 pnpm run v8-snapshot:arch",
     "v8-snapshot:arch": "pnpm run mk-snapshot && pnpm run cp-snapshot",
     "mk-snapshot": "cross-env ELECTRON_CUSTOM_VERSION=$npm_package_devDependencies_electron node node_modules/electron-mksnapshot/download-mksnapshot.js && node bin/mk-snapshot.js",
     "cp-snapshot": "node bin/cp-snapshot.js",
-    "generate-schema": "typescript-json-schema ./typings/config.d.ts rawConfig -o ./app/config/schema.json --required"
+    "generate-schema": "typescript-json-schema ./typings/config.d.ts rawConfig -o ./app/config/schema.json --required --skipLibCheck --ignoreErrors"
   },
   "license": "MIT",
   "author": {
@@ -46,6 +47,7 @@
     "clsx": "2.1.0",
     "color": "4.2.3",
     "columnify": "1.6.0",
+    "express": "^4.18.2",
     "got": "12.4.1",
     "lodash": "4.17.21",
     "mousetrap": "chabou/mousetrap#useCapture",
@@ -66,7 +68,8 @@
     "styled-jsx": "5.1.2",
     "stylis": "3.5.4",
     "typescript-json-schema": "0.63.0",
-    "uuid": "9.0.1"
+    "uuid": "9.0.1",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@ava/babel": "2.0.0",
@@ -85,6 +88,7 @@
     "@types/async-retry": "1.4.3",
     "@types/color": "3.0.6",
     "@types/columnify": "^1.5.4",
+    "@types/express": "^4.17.21",
     "@types/fs-extra": "11.0.4",
     "@types/lodash": "^4.17.0",
     "@types/mousetrap": "1.6.15",
@@ -96,6 +100,7 @@
     "@types/seamless-immutable": "7.1.19",
     "@types/styled-jsx": "2.2.9",
     "@types/uuid": "9.0.8",
+    "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "7.0.0",
     "@typescript-eslint/parser": "6.21.0",
     "@vitejs/plugin-react": "^6.0.1",
@@ -104,7 +109,7 @@
     "concurrently": "8.2.2",
     "cpy-cli": "^5.0.0",
     "cross-env": "7.0.3",
-    "electron": "^41.1.1",
+    "electron": "41.0.4",
     "electron-builder": "^26.8.1",
     "electron-link": "^0.6.0",
     "electron-mksnapshot": "41.0.4",

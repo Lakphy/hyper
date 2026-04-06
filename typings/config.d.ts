@@ -208,6 +208,33 @@ export type configOptions = rootConfigOptions &
        */
       config: Partial<profileConfigOptions>;
     }[];
+    /**
+     * Remote terminal server configuration
+     */
+    remoteTerminal?: {
+      /** Enable remote terminal server (default: true) */
+      enabled?: boolean;
+      /** Server port (default: 3030) */
+      port?: number;
+      /** Server host (default: '127.0.0.1') */
+      host?: string;
+      /** Maximum history lines per session (default: 10000) */
+      maxHistoryLines?: number;
+      /** Authentication configuration */
+      auth?: {
+        /** Authentication type: 'token' or 'none' (default: 'token') */
+        type?: 'token' | 'none';
+        /** Auth token, use 'auto' to generate automatically (default: 'auto') */
+        token?: string;
+      };
+      /** Feature flags */
+      features?: {
+        /** Allow remote input to terminals (default: true) */
+        allowInput?: boolean;
+        /** Allow remote resize of terminals (default: false) */
+        allowResize?: boolean;
+      };
+    };
   };
 
 export type rawConfig = {

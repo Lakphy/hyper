@@ -18,6 +18,7 @@ import {icon, homeDirectory} from '../config/paths';
 import fetchNotifications from '../notifications';
 import notify from '../notify';
 import {decorateSessionOptions, decorateSessionClass} from '../plugins';
+import type {TerminalStateManager} from '../remote/state-manager';
 import createRPC from '../rpc';
 import Session from '../session';
 import updater from '../updater';
@@ -77,6 +78,9 @@ export function newWindow(
 
   const rpc = createRPC(window);
   const sessions = new Map<string, Session>();
+
+  // Get remote state manager if available
+  const stateManager: TerminalStateManager | undefined = (window as any).remoteStateManager;
 
   window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     console.error('Renderer failed to load', {errorCode, errorDescription, validatedURL});
@@ -202,6 +206,22 @@ export function newWindow(
     const {session, options} = createSession(extraOptions);
 
     sessions.set(options.uid, session);
+
+    // Register session with remote state manager
+    if (stateManager) {
+      stateManager.registerSession({
+        uid: options.uid,
+        windowId: window.uid,
+        windowTitle: window.getTitle(),
+        tabIndex: 0, // TODO: get actual tab index
+        shell: session.shell || '',
+        pid: session.pty ? session.pty.pid : null,
+        cwd: options.cwd,
+        profile: options.profile,
+        createdAt: Date.now()
+      });
+    }
+
     rpc.emit('session add', {
       rows: options.rows,
       cols: options.cols,
@@ -215,11 +235,19 @@ export function newWindow(
 
     session.on('data', (data: string) => {
       rpc.emit('session data', data);
+      // Forward data to remote state manager
+      if (stateManager) {
+        stateManager.onSessionData(options.uid, data);
+      }
     });
 
     session.on('exit', () => {
       rpc.emit('session exit', {uid: options.uid});
       unsetRendererType(options.uid);
+      // Unregister from remote state manager
+      if (stateManager) {
+        stateManager.unregisterSession(options.uid);
+      }
       sessions.delete(options.uid);
     });
   });
@@ -230,6 +258,24 @@ export function newWindow(
       session.exit();
     }
   });
+
+  // Handle remote input from WebSocket clients
+  if (stateManager) {
+    stateManager.on('remote_input', ({uid, data}: {uid: string; data: string}) => {
+      const session = sessions.get(uid);
+      if (session) {
+        session.write(data);
+      }
+    });
+
+    stateManager.on('remote_resize', ({uid, cols, rows}: {uid: string; cols: number; rows: number}) => {
+      const session = sessions.get(uid);
+      if (session) {
+        session.resize({cols, rows});
+      }
+    });
+  }
+
   rpc.on('unmaximize', () => {
     window.unmaximize();
   });

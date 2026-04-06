@@ -69,7 +69,21 @@
         "name": "default",
         "config": {}
       }
-    ]
+    ],
+    "remoteTerminal": {
+      "enabled": true,
+      "port": 3030,
+      "host": "127.0.0.1",
+      "maxHistoryLines": 10000,
+      "auth": {
+        "type": "token",
+        "token": "auto"
+      },
+      "features": {
+        "allowInput": true,
+        "allowResize": false
+      }
+    }
   },
   "plugins": [],
   "localPlugins": [],

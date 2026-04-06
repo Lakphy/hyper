@@ -2,6 +2,14 @@ const path = require('path');
 const fs = require('fs');
 const {Arch} = require('electron-builder');
 
+function assertFileExists(filePath) {
+  if (!fs.existsSync(filePath)) {
+    const parentDir = path.dirname(filePath);
+    const availableFiles = fs.existsSync(parentDir) ? fs.readdirSync(parentDir).join(', ') : '(directory missing)';
+    throw new Error(`Missing snapshot file: ${filePath}. Available files in ${parentDir}: ${availableFiles}`);
+  }
+}
+
 function copySnapshot(pathToElectron, archToCopy) {
   const snapshotFileName = 'snapshot_blob.bin';
   const v8ContextFileName = getV8ContextFileName(archToCopy);
@@ -9,6 +17,8 @@ function copySnapshot(pathToElectron, archToCopy) {
   const pathToBlobV8 = path.resolve(__dirname, '..', 'cache', archToCopy, v8ContextFileName);
 
   console.log('Copying v8 snapshots from', pathToBlob, 'to', pathToElectron);
+  assertFileExists(pathToBlob);
+  assertFileExists(pathToBlobV8);
   fs.copyFileSync(pathToBlob, path.join(pathToElectron, snapshotFileName));
   fs.copyFileSync(pathToBlobV8, path.join(pathToElectron, v8ContextFileName));
 }
@@ -47,6 +57,10 @@ exports.default = async (context) => {
 if (require.main === module) {
   const archToCopy = process.env.npm_config_arch;
   const pathToElectron = getPathToElectron();
+  if (!archToCopy) {
+    throw new Error('npm_config_arch is required when copying V8 snapshots');
+  }
+
   if ((process.arch.startsWith('arm') ? 'arm64' : 'x64') === archToCopy) {
     copySnapshot(pathToElectron, archToCopy);
   }

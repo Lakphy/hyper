@@ -704,6 +704,60 @@
                                 "type": "object"
                             },
                             "type": "array"
+                        },
+                        "remoteTerminal": {
+                            "description": "Remote terminal server configuration",
+                            "properties": {
+                                "auth": {
+                                    "description": "Authentication configuration",
+                                    "properties": {
+                                        "token": {
+                                            "description": "Auth token, use 'auto' to generate automatically (default: 'auto')",
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "description": "Authentication type: 'token' or 'none' (default: 'token')",
+                                            "enum": [
+                                                "none",
+                                                "token"
+                                            ],
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "enabled": {
+                                    "description": "Enable remote terminal server (default: true)",
+                                    "type": "boolean"
+                                },
+                                "features": {
+                                    "description": "Feature flags",
+                                    "properties": {
+                                        "allowInput": {
+                                            "description": "Allow remote input to terminals (default: true)",
+                                            "type": "boolean"
+                                        },
+                                        "allowResize": {
+                                            "description": "Allow remote resize of terminals (default: false)",
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "host": {
+                                    "description": "Server host (default: '127.0.0.1')",
+                                    "type": "string"
+                                },
+                                "maxHistoryLines": {
+                                    "description": "Maximum history lines per session (default: 10000)",
+                                    "type": "number"
+                                },
+                                "port": {
+                                    "description": "Server port (default: 3030)",
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "required": [

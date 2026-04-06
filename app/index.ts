@@ -36,11 +36,15 @@ import parseUrl from 'parse-url';
 
 import * as AppMenu from './menus/menu';
 import * as plugins from './plugins';
+import {RemoteTerminalServer} from './remote/websocket-server';
 import {newWindow} from './ui/window';
 import {installCLI} from './utils/cli-install';
 import * as windowUtils from './utils/window-utils';
 
 const windowSet = new Set<BrowserWindow>([]);
+
+// Remote terminal server
+let remoteServer: RemoteTerminalServer | null = null;
 
 // expose to plugins
 app.config = config;
@@ -142,6 +146,22 @@ app.on('ready', async () => {
     console.error('[devtools] Unexpected failure while preparing extensions', err);
   }
 
+  // Start remote terminal server
+  const cfg = config.getConfig();
+  if (cfg.remoteTerminal?.enabled !== false) {
+    try {
+      const port = cfg.remoteTerminal?.port || 3030;
+      const host = cfg.remoteTerminal?.host || '127.0.0.1';
+      remoteServer = new RemoteTerminalServer(port, {
+        ...cfg.remoteTerminal,
+        port,
+        host
+      });
+    } catch (err) {
+      console.error('Failed to start remote terminal server:', err);
+    }
+  }
+
   function createWindow(
     fn?: (win: BrowserWindow) => void,
     options: {size?: [number, number]; position?: [number, number]} = {},
@@ -191,6 +211,12 @@ app.on('ready', async () => {
 
     const hwin = newWindow({width, height, x: startX, y: startY}, cfg, fn, profileName);
     windowSet.add(hwin);
+
+    // Pass remote server state manager to window
+    if (remoteServer) {
+      hwin.remoteStateManager = remoteServer.getStateManager();
+    }
+
     void hwin.loadURL(url);
 
     // the window can be closed by the browser process itself
@@ -221,6 +247,10 @@ app.on('ready', async () => {
     if (process.platform !== 'darwin') {
       app.quit();
     }
+  });
+
+  app.on('will-quit', () => {
+    remoteServer?.close();
   });
 
   const makeMenu = () => {
