@@ -25,7 +25,7 @@ function waitForOpen(ws: WebSocket): Promise<void> {
 function waitForMessage(ws: WebSocket, skipTypes?: string[]): Promise<any> {
   return new Promise((resolve) => {
     const handler = (data: Buffer) => {
-      const msg = JSON.parse(data.toString());
+      const msg = JSON.parse(data.toString()) as {type: string};
       if (skipTypes && skipTypes.includes(msg.type)) {
         ws.once('message', handler);
         return;
