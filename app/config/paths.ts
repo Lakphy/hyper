@@ -5,7 +5,9 @@ import {resolve, join} from 'path';
 
 import {app} from 'electron';
 
-import isDev from 'electron-is-dev';
+const isDev = 'ELECTRON_IS_DEV' in process.env
+  ? Number.parseInt(process.env.ELECTRON_IS_DEV!, 10) === 1
+  : !app.isPackaged;
 
 const cfgFile = 'hyper.json';
 const defaultCfgFile = 'config-default.json';

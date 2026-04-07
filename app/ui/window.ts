@@ -6,9 +6,12 @@ import {app, BrowserWindow, shell, Menu} from 'electron';
 import type {BrowserWindowConstructorOptions} from 'electron';
 
 import {enable as remoteEnable} from '@electron/remote/main';
-import isDev from 'electron-is-dev';
 import {getWorkingDirectoryFromPID} from 'native-process-working-directory';
 import {v4 as uuidv4} from 'uuid';
+
+const isDev = 'ELECTRON_IS_DEV' in process.env
+  ? Number.parseInt(process.env.ELECTRON_IS_DEV!, 10) === 1
+  : !app.isPackaged;
 
 import type {sessionExtraOptions} from '../../typings/common';
 import type {configOptions} from '../../typings/config';

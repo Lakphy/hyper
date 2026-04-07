@@ -33,8 +33,11 @@ import {resolve} from 'path';
 
 import {app, BrowserWindow, Menu, screen} from 'electron';
 
-import isDev from 'electron-is-dev';
 import {gitDescribe} from 'git-describe';
+
+const isDev = 'ELECTRON_IS_DEV' in process.env
+  ? Number.parseInt(process.env.ELECTRON_IS_DEV!, 10) === 1
+  : !app.isPackaged;
 import parseUrl from 'parse-url';
 
 import * as AppMenu from './menus/menu';
@@ -150,10 +153,10 @@ async function installDevExtensions(isDev_: boolean) {
     extensions.map(async ({id, name}) => {
       try {
         installedExtensions.push(
-          await installer(id, {
+          String(await installer(id, {
             forceDownload,
             loadExtensionOptions: {allowFileAccess: true}
-          })
+          }))
         );
       } catch (error) {
         const message = getDevtoolsErrorMessage(error);
