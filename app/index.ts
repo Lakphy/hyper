@@ -62,19 +62,23 @@ function getInternalIP(): string {
   return '127.0.0.1';
 }
 
-function getRemoteTerminalUrl(): string | null {
+function getRemoteTerminalUrls(): {local: string; lan: string} | null {
   if (!remoteServer) return null;
   const cfg = config.getConfig();
   const port = cfg.remoteTerminal?.port || 3030;
-  const ip = getInternalIP();
+  const lanIp = getInternalIP();
   const token = remoteServer.getAuthToken();
-  return token ? `http://${ip}:${port}?token=${token}` : `http://${ip}:${port}`;
+  const qs = token ? `?token=${token}` : '';
+  return {
+    local: `http://localhost:${port}${qs}`,
+    lan: `http://${lanIp}:${port}${qs}`
+  };
 }
 
 function sendRemoteUrlToWindow(win: BrowserWindow) {
-  const url = getRemoteTerminalUrl();
-  if (url && win.rpc) {
-    win.rpc.emit('remote terminal url', {url});
+  const urls = getRemoteTerminalUrls();
+  if (urls && win.rpc) {
+    win.rpc.emit('remote terminal url', urls);
   }
 }
 
@@ -183,7 +187,7 @@ app.on('ready', async () => {
   if (cfg.remoteTerminal?.enabled !== false) {
     try {
       const port = cfg.remoteTerminal?.port || 3030;
-      const host = cfg.remoteTerminal?.host || '127.0.0.1';
+      const host = cfg.remoteTerminal?.host || '0.0.0.0';
       remoteServer = new RemoteTerminalServer(port, {
         ...cfg.remoteTerminal,
         port,

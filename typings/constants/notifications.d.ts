@@ -14,7 +14,8 @@ export interface NotificationDismissAction {
 }
 export interface NotificationRemoteUrlAction {
   type: typeof NOTIFICATION_REMOTE_URL;
-  url: string;
+  localUrl: string;
+  lanUrl: string;
 }
 
 export type NotificationActions = NotificationMessageAction | NotificationDismissAction | NotificationRemoteUrlAction;

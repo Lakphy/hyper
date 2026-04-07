@@ -4,15 +4,19 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   overflow: hidden;
   background: #000;
   color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
 }
 
-/* ===== Main Container (matches .hyper_main) ===== */
+/* ===== Main Container ===== */
 .hyper-remote {
   position: fixed;
   top: 0;
@@ -25,7 +29,7 @@ html, body, #root {
   flex-direction: column;
 }
 
-/* ===== Header / Tab Bar (matches Hyper tabs_nav) ===== */
+/* ===== Header / Tab Bar ===== */
 .header {
   position: relative;
   z-index: 100;
@@ -46,7 +50,7 @@ html, body, #root {
   user-select: none;
 }
 
-/* Single tab title (no tab bar, just centered title) */
+/* Single tab title */
 .tabs-title {
   text-align: center;
   color: #fff;
@@ -67,7 +71,7 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* ===== Individual Tab (matches Hyper tab_tab) ===== */
+/* ===== Individual Tab ===== */
 .tab {
   color: #ccc;
   border-color: #333;
@@ -174,30 +178,55 @@ html, body, #root {
   pointer-events: all;
 }
 
-/* ===== Window Selector (dropdown on the right of tabs) ===== */
-.window-selector {
+/* ===== Header Toolbar (right side) ===== */
+.header-toolbar {
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  border-bottom: 1px solid #333;
-  border-left: 1px solid #333;
-  color: #9b9b9b;
-  font-size: 11px;
-  cursor: pointer;
-  position: relative;
   flex-shrink: 0;
-  gap: 4px;
-  min-width: 36px;
-  justify-content: center;
+  border-bottom: 1px solid #333;
 }
 
-.window-selector:hover {
+.header-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-left: 1px solid #333;
+  background: transparent;
+  color: #9b9b9b;
+  font-size: 14px;
+  font-weight: 300;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+  font-family: inherit;
+}
+
+.header-toolbar-btn:hover {
   color: #fff;
 }
 
+.header-toolbar-btn:active {
+  color: #666;
+}
+
+/* ===== Window Selector (dropdown in toolbar) ===== */
+.window-selector {
+  position: relative;
+  gap: 3px;
+  font-size: 11px;
+  min-width: 36px;
+}
+
 .window-selector-icon {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
+}
+
+.window-selector-arrow {
+  font-size: 10px;
 }
 
 /* Window dropdown menu */
@@ -206,7 +235,7 @@ html, body, #root {
   top: 34px;
   right: 0;
   min-width: 200px;
-  background: #1a1a1a;
+  background: black;
   border: 1px solid #333;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -249,13 +278,13 @@ html, body, #root {
   color: #fff;
 }
 
-.window-dropdown-item--active {
-  color: #fff;
-  background: rgba(248, 28, 229, 0.12);
-}
-
 .window-dropdown-item--current {
   color: #f81ce5;
+}
+
+.window-dropdown-pid {
+  color: #666;
+  font-size: 11px;
 }
 
 .window-dropdown-separator {
@@ -264,7 +293,7 @@ html, body, #root {
   margin: 4px 0;
 }
 
-/* ===== Terminal Area (matches Hyper terms_terms) ===== */
+/* ===== Terminal Area ===== */
 .terms {
   position: relative;
   flex: 1;
@@ -301,87 +330,86 @@ html, body, #root {
   color: #444;
 }
 
-/* ===== New Tab Button (matches Hyper new_tab) ===== */
-.new-tab {
-  background: transparent;
-  color: #fff;
-  border-left: 1px solid #333;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 300;
-  height: 34px;
-  line-height: 34px;
-  padding: 0 14px;
-  position: relative;
-  text-align: center;
-  user-select: none;
-  flex-shrink: 0;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
-}
-
-.new-tab:hover {
-  opacity: 1;
-}
-
-.new-tab:active {
-  opacity: 0.3;
-}
-
-.new-tab--hidden {
-  border-color: transparent;
-  position: absolute;
-  right: 0;
-}
-
-.new-tab--hidden:hover {
-  border-color: #333;
-}
-
-/* ===== Connection Status Indicator (inline in header) ===== */
-.connection-indicator {
+/* ===== Bottom Status Bar ===== */
+.statusbar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  border-bottom: 1px solid #333;
+  justify-content: space-between;
+  height: 22px;
+  background: black;
+  border-top: 1px solid #333;
+  padding: 0 4px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.statusbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.statusbar-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.statusbar-connection {
   font-size: 11px;
-  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0 6px;
 }
 
-.connection-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.statusbar-connection--connecting {
+  color: #c7c329;
 }
 
-.connection-dot--connecting {
-  background: #c7c329;
-  animation: pulse 1s ease-in-out infinite;
+.statusbar-connection--connected {
+  color: #1dc121;
 }
 
-.connection-dot--connected {
-  background: #1dc121;
+.statusbar-connection--disconnected {
+  color: #686868;
 }
 
-.connection-dot--disconnected {
-  background: #686868;
+.statusbar-connection--error {
+  color: #c51e14;
 }
 
-.connection-dot--error {
-  background: #c51e14;
-}
-
-.connection-label {
+.statusbar-sessions {
+  font-size: 11px;
   color: #666;
   white-space: nowrap;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+.statusbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-family: inherit;
+  color: #ccc;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.statusbar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.statusbar-btn:active {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ===== History Loading Overlay ===== */

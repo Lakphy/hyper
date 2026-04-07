@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useCallback} from 'react';
 
 import {useRemoteStore} from '../store/remote-store';
 import type {ConnectionStatus} from '../types';
@@ -10,24 +10,62 @@ const STATUS_LABELS: Record<ConnectionStatus, string> = {
   error: '✕ Error'
 };
 
-const STATUS_CLASSES: Record<ConnectionStatus, string> = {
-  connecting: 'status--connecting',
-  connected: 'status--connected',
-  disconnected: 'status--disconnected',
-  error: 'status--error'
-};
+type CopiedKey = 'local' | 'lan' | null;
+
+function getRemoteUrls() {
+  const proto = window.location.protocol;
+  const port = window.location.port;
+  const token = new URLSearchParams(window.location.search).get('token');
+  const qs = token ? `?token=${token}` : '';
+  return {
+    local: `${proto}//localhost:${port}${qs}`,
+    lan: `${proto}//${window.location.hostname}:${port}${qs}`
+  };
+}
 
 export function StatusBar() {
   const {state} = useRemoteStore();
-  const {connectionStatus, sessions, lastError} = state;
+  const {connectionStatus, sessions} = state;
+  const [copied, setCopied] = useState<CopiedKey>(null);
+
+  const handleCopy = useCallback((url: string, key: CopiedKey) => {
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1500);
+    });
+  }, []);
+
+  const urls = getRemoteUrls();
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   return (
-    <div className="status-bar">
-      <span className={`status-indicator ${STATUS_CLASSES[connectionStatus]}`}>{STATUS_LABELS[connectionStatus]}</span>
-      <span className="status-sessions">
-        {sessions.length} session{sessions.length !== 1 ? 's' : ''}
-      </span>
-      {lastError && <span className="status-error">{lastError}</span>}
+    <div className="statusbar">
+      <div className="statusbar-left">
+        <span className={`statusbar-connection statusbar-connection--${connectionStatus}`}>
+          {STATUS_LABELS[connectionStatus]}
+        </span>
+        <span className="statusbar-sessions">
+          {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+      <div className="statusbar-right">
+        <button
+          className="statusbar-btn"
+          onClick={() => handleCopy(urls.local, 'local')}
+          title={urls.local}
+        >
+          {copied === 'local' ? '✓ Copied' : '⌘ Localhost'}
+        </button>
+        {!isLocalhost && (
+          <button
+            className="statusbar-btn"
+            onClick={() => handleCopy(urls.lan, 'lan')}
+            title={urls.lan}
+          >
+            {copied === 'lan' ? '✓ Copied' : '⌘ LAN'}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

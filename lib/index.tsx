@@ -9,7 +9,7 @@ import type {configOptions} from '../typings/config';
 
 import {loadConfig, reloadConfig} from './actions/config';
 import init from './actions/index';
-import {addNotificationMessage, setRemoteTerminalUrl} from './actions/notifications';
+import {addNotificationMessage, setRemoteTerminalUrls} from './actions/notifications';
 import * as sessionActions from './actions/sessions';
 import * as termGroupActions from './actions/term-groups';
 import * as uiActions from './actions/ui';
@@ -254,8 +254,8 @@ if (!rendererWindow.__hyperRendererBootstrap) {
     store_.dispatch(addNotificationMessage(text, url, dismissable));
   });
 
-  rpc.on('remote terminal url', ({url}) => {
-    store_.dispatch(setRemoteTerminalUrl(url));
+  rpc.on('remote terminal url', ({local, lan}) => {
+    store_.dispatch(setRemoteTerminalUrls(local, lan));
   });
 
   rpc.on('enter full screen', () => {

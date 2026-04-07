@@ -216,7 +216,7 @@ export type configOptions = rootConfigOptions &
       enabled?: boolean;
       /** Server port (default: 3030) */
       port?: number;
-      /** Server host (default: '127.0.0.1') */
+      /** Server host (default: '0.0.0.0', listens on all interfaces for LAN access) */
       host?: string;
       /** Maximum history lines per session (default: 10000) */
       maxHistoryLines?: number;

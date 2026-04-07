@@ -111,7 +111,10 @@ export function setSessionXtermTitle(uid: string, title: string): HyperActions {
   return {
     type: SESSION_SET_XTERM_TITLE,
     uid,
-    title
+    title,
+    effect() {
+      rpc.emit('session set xterm title', {uid, title});
+    }
   };
 }
 

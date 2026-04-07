@@ -290,10 +290,15 @@ export function newWindow(
     });
 
     sm.on('remote_create_tab', ({windowId}: {windowId: string | null}) => {
-      // If windowId is specified, only the matching window creates the tab.
-      // If null, the first window that receives the event creates it.
       if (windowId && windowId !== window.uid) return;
       rpc.emit('termgroup add req', {});
+    });
+
+    sm.on('remote_close_tab', ({uid}: {uid: string}) => {
+      const session = sessions.get(uid);
+      if (session) {
+        session.exit();
+      }
     });
   };
   // Try immediately, then retry after a short delay to catch the deferred assignment
@@ -334,8 +339,13 @@ export function newWindow(
     }
   });
   rpc.on('info renderer', ({uid, type}) => {
-    // Used in the "About" dialog
     setRendererType(uid, type);
+  });
+  rpc.on('session set xterm title', ({uid, title}) => {
+    const sm = getStateManager();
+    if (sm) {
+      sm.updateSession(uid, {title});
+    }
   });
   rpc.on('open external', ({url}) => {
     void shell.openExternal(url);

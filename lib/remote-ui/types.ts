@@ -11,6 +11,7 @@ export interface TerminalSessionInfo {
   profile?: string;
   cols?: number;
   rows?: number;
+  title?: string;
   createdAt: number;
 }
 
@@ -35,6 +36,7 @@ export type WSClientMessage =
   | {type: 'unsubscribe'; payload: {uids: string[]}}
   | {type: 'input'; payload: {uid: string; data: string}}
   | {type: 'resize'; payload: {uid: string; cols: number; rows: number}}
-  | {type: 'create_tab'; payload: {windowId?: string}};
+  | {type: 'create_tab'; payload: {windowId?: string}}
+  | {type: 'close_tab'; payload: {uid: string}};
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';

@@ -12,6 +12,7 @@ import {connect} from '../utils/plugins';
 
 import {HeaderContainer} from './header';
 import NotificationsContainer from './notifications';
+import {StatusBarContainer} from './status-bar';
 import TermsContainer from './terms';
 
 const isMac = /Mac/.test(navigator.userAgent);
@@ -102,6 +103,7 @@ const Hyper = forwardRef<HTMLDivElement, HyperProps>((props, ref) => {
       >
         <HeaderContainer />
         <TermsContainer ref_={onTermsRef} />
+        <StatusBarContainer />
         {props.customInnerChildren}
       </div>
 
@@ -130,6 +132,10 @@ const Hyper = forwardRef<HTMLDivElement, HyperProps>((props, ref) => {
           .fullScreen {
             border-radius: 0;
             border: 0;
+          }
+
+          .hyper_main :global(.terms_terms) {
+            bottom: 22px;
           }
         `}
       </style>

@@ -44,13 +44,14 @@ export type MainEvents = {
   'open hamburger menu': {x: number; y: number};
   'quit and install': never;
   resize: {uid: string; cols: number; rows: number};
+  'session set xterm title': {uid: string; title: string};
   unmaximize: never;
 };
 
 export type RendererEvents = {
   ready: never;
   'add notification': {text: string; url: string; dismissable: boolean};
-  'remote terminal url': {url: string};
+  'remote terminal url': {local: string; lan: string};
   'update available': {releaseNotes: string; releaseName: string; releaseUrl: string; canInstall: boolean};
   'open ssh': ReturnType<typeof parseUrl>;
   'open file': {path: string};

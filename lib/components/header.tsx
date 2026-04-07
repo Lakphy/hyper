@@ -143,8 +143,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>((props, ref) => {
           fullScreen: props.fullScreen,
           defaultProfile: props.defaultProfile,
           profiles: props.profiles.asMutable({deep: true}),
-          openNewTab: props.openNewTab,
-          remoteTerminalUrl: props.remoteTerminalUrl
+          openNewTab: props.openNewTab
         })}
       />
       {props.customChildren}

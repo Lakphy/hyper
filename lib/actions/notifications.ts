@@ -21,9 +21,10 @@ export function addNotificationMessage(text: string, url: string | null = null, 
   };
 }
 
-export function setRemoteTerminalUrl(url: string): HyperActions {
+export function setRemoteTerminalUrls(localUrl: string, lanUrl: string): HyperActions {
   return {
     type: NOTIFICATION_REMOTE_URL,
-    url
+    localUrl,
+    lanUrl
   };
 }

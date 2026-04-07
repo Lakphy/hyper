@@ -42,7 +42,8 @@ const mapStateToProps = (state: HyperState) => {
     showWindowControls: state.ui.showWindowControls,
     defaultProfile: state.ui.defaultProfile,
     profiles: state.ui.profiles,
-    remoteTerminalUrl: state.ui.remoteTerminalUrl
+    remoteLocalUrl: state.ui.remoteLocalUrl,
+    remoteLanUrl: state.ui.remoteLanUrl
   };
 };
 

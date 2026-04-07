@@ -28,6 +28,7 @@ interface WSMessage {
     | 'subscribe'
     | 'unsubscribe'
     | 'create_tab'
+    | 'close_tab'
     | 'error';
   payload: any;
 }
@@ -65,7 +66,7 @@ export class RemoteTerminalServer {
     this.port = port;
     this.config = {
       enabled: true,
-      host: '127.0.0.1',
+      host: '0.0.0.0',
       auth: {type: 'token', token: 'auto'},
       features: {allowInput: true, allowResize: false},
       ...config
@@ -258,6 +259,9 @@ export class RemoteTerminalServer {
         case 'create_tab':
           this.handleCreateTab(message.payload as {windowId?: string});
           break;
+        case 'close_tab':
+          this.handleCloseTab(message.payload as {uid: string});
+          break;
         default:
           throw new Error(`Unknown message type: ${message.type}`);
       }
@@ -310,7 +314,7 @@ export class RemoteTerminalServer {
 
   private handleResize(payload: {uid: string; cols: number; rows: number}) {
     if (!this.config.features?.allowResize) {
-      throw new Error('Remote resize is disabled');
+      return;
     }
 
     const {uid, cols, rows} = payload;
@@ -341,6 +345,18 @@ export class RemoteTerminalServer {
 
     // Emit event that will be handled in window.ts to create a new tab
     this.stateManager.emit('remote_create_tab', {windowId: windowId || null});
+  }
+
+  private handleCloseTab(payload: {uid: string}) {
+    const {uid} = payload;
+    if (!uid) {
+      throw new Error('Invalid close_tab payload');
+    }
+    const session = this.stateManager.getSession(uid);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+    this.stateManager.emit('remote_close_tab', {uid});
   }
 
   private async sendSessionHistory(ws: WebSocket, uid: string) {
@@ -416,10 +432,10 @@ export class RemoteTerminalServer {
   }
 
   private showAccessURL() {
-    const url = this.authToken
-      ? `http://${this.config.host}:${this.port}?token=${this.authToken}`
-      : `http://${this.config.host}:${this.port}`;
-    console.log(`\n🌐 Remote Terminal Server started at:\n${url}\n`);
+    const qs = this.authToken ? `?token=${this.authToken}` : '';
+    console.log(`\n🌐 Remote Terminal Server started on port ${this.port}`);
+    console.log(`  Local:  http://localhost:${this.port}${qs}`);
+    console.log(`  Host:   http://${this.config.host}:${this.port}${qs}\n`);
   }
 
   // Public API

@@ -105,7 +105,8 @@ const initial: uiState = Immutable<Mutable<uiState>>({
   messageText: null,
   messageURL: null,
   messageDismissable: null,
-  remoteTerminalUrl: null,
+  remoteLocalUrl: null,
+  remoteLanUrl: null,
   bell: 'SOUND',
   bellSoundURL: null, // directly relates to the value in the configuration file
   bellSound: null, // A base64 encoded binary string representation of the audio data from the bellSoundURL
@@ -443,7 +444,7 @@ const reducer: IUiReducer = (state = initial, action) => {
       break;
 
     case NOTIFICATION_REMOTE_URL:
-      state_ = state.set('remoteTerminalUrl', action.url);
+      state_ = state.merge({remoteLocalUrl: action.localUrl, remoteLanUrl: action.lanUrl});
       break;
 
     case UPDATE_AVAILABLE:

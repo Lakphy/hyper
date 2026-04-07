@@ -13,6 +13,7 @@ export interface TerminalSessionInfo {
   profile?: string;
   cols?: number;
   rows?: number;
+  title?: string;
   createdAt: number;
 }
 
