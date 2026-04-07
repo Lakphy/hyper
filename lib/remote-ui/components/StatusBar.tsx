@@ -54,19 +54,11 @@ export function StatusBar() {
         )}
       </div>
       <div className="statusbar-right">
-        <button
-          className="statusbar-btn"
-          onClick={() => handleCopy(urls.local, 'local')}
-          title={urls.local}
-        >
+        <button className="statusbar-btn" onClick={() => handleCopy(urls.local, 'local')} title={urls.local}>
           {copied === 'local' ? '✓ Copied' : '⌘ Localhost'}
         </button>
         {!isLocalhost && (
-          <button
-            className="statusbar-btn"
-            onClick={() => handleCopy(urls.lan, 'lan')}
-            title={urls.lan}
-          >
+          <button className="statusbar-btn" onClick={() => handleCopy(urls.lan, 'lan')} title={urls.lan}>
             {copied === 'lan' ? '✓ Copied' : '⌘ LAN'}
           </button>
         )}

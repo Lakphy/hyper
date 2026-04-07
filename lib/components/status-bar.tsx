@@ -1,14 +1,14 @@
-import React, { useState, useCallback } from "react";
+import React, {useState, useCallback} from 'react';
 
 const electronShell = (
   window as typeof window & {
-    require: (id: "electron") => {
-      clipboard: { writeText: (text: string) => void };
+    require: (id: 'electron') => {
+      clipboard: {writeText: (text: string) => void};
     };
   }
-).require("electron");
+).require('electron');
 
-const { clipboard } = electronShell;
+const {clipboard} = electronShell;
 
 export interface StatusBarProps {
   remoteLocalUrl: string | null;
@@ -16,13 +16,9 @@ export interface StatusBarProps {
   borderColor: string;
 }
 
-type CopiedKey = "local" | "lan" | null;
+type CopiedKey = 'local' | 'lan' | null;
 
-const StatusBar = ({
-  remoteLocalUrl,
-  remoteLanUrl,
-  borderColor,
-}: StatusBarProps) => {
+const StatusBar = ({remoteLocalUrl, remoteLanUrl, borderColor}: StatusBarProps) => {
   const [copied, setCopied] = useState<CopiedKey>(null);
 
   const handleCopy = useCallback((url: string, key: CopiedKey) => {
@@ -39,21 +35,13 @@ const StatusBar = ({
       {/* 右侧区域 — Remote URL 复制按钮 */}
       <div className="statusbar_right">
         {remoteLocalUrl && (
-          <button
-            className="statusbar_btn"
-            onClick={() => handleCopy(remoteLocalUrl, "local")}
-            title={remoteLocalUrl}
-          >
-            {copied === "local" ? "✓ Copied" : "⌘ Localhost"}
+          <button className="statusbar_btn" onClick={() => handleCopy(remoteLocalUrl, 'local')} title={remoteLocalUrl}>
+            {copied === 'local' ? '✓ Copied' : '⌘ Localhost'}
           </button>
         )}
         {remoteLanUrl && (
-          <button
-            className="statusbar_btn"
-            onClick={() => handleCopy(remoteLanUrl, "lan")}
-            title={remoteLanUrl}
-          >
-            {copied === "lan" ? "✓ Copied" : "⌘ LAN"}
+          <button className="statusbar_btn" onClick={() => handleCopy(remoteLanUrl, 'lan')} title={remoteLanUrl}>
+            {copied === 'lan' ? '✓ Copied' : '⌘ LAN'}
           </button>
         )}
       </div>

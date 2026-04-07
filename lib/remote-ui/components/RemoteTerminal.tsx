@@ -17,8 +17,9 @@ interface RemoteTerminalProps {
 }
 
 function isMobileDevice(): boolean {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    ('ontouchstart' in window && window.innerWidth <= 600);
+  return (
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth <= 600)
+  );
 }
 
 function getMobileFontSize(): number {

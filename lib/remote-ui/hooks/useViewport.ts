@@ -15,8 +15,10 @@ export interface ViewportInfo {
 
 function detectMobile(): boolean {
   if (typeof window === 'undefined') return false;
-  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    ('ontouchstart' in window && window.innerWidth <= 1024);
+  return (
+    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    ('ontouchstart' in window && window.innerWidth <= 1024)
+  );
 }
 
 /**

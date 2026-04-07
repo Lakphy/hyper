@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex */
 /**
  * Filter for detecting xterm.js terminal query responses.
  *
@@ -35,6 +36,7 @@ const OSC_RE = /^\x1b\]\d+;[^\x07]*(?:\x07|\x1b\\)$/;
 // Kitty keyboard protocol query response: \e[?...u
 const KITTY_KBD_RE = /^\x1b\[\?\d+u$/;
 
+/* eslint-enable no-control-regex */
 const RESPONSE_PATTERNS = [CPR_RE, DA1_RE, DA2_RE, DSR_RE, DECRPM_RE, DCS_RE, OSC_RE, KITTY_KBD_RE];
 
 export function isTerminalResponse(data: string): boolean {

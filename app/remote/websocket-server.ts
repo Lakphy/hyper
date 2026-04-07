@@ -297,7 +297,7 @@ export class RemoteTerminalServer {
       for (const uid of uids) {
         // Inform the client of the current terminal size so it can adapt
         const session = this.stateManager.getSession(uid);
-        if (session && session.cols && session.rows) {
+        if (session?.cols && session?.rows) {
           ws.send(
             JSON.stringify({
               type: 'session_updated',

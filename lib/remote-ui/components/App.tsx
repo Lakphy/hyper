@@ -206,7 +206,15 @@ export function App({token}: AppProps) {
                         {title}
                       </span>
                     </span>
-                    <i className="tab-icon" onClick={(e) => { e.stopPropagation(); handleCloseTab(session.uid); }}>✕</i>
+                    <i
+                      className="tab-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCloseTab(session.uid);
+                      }}
+                    >
+                      ✕
+                    </i>
                   </li>
                 );
               })}
