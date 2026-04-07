@@ -270,6 +270,13 @@ app.on('ready', async () => {
     return hwin;
   }
 
+  // Listen for remote_create_window so WebUI can spawn a new Electron window
+  if (remoteServer) {
+    remoteServer.getStateManager().on('remote_create_window', () => {
+      createWindow();
+    });
+  }
+
   // when opening create a new window
   createWindow();
 

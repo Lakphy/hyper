@@ -29,6 +29,7 @@ interface WSMessage {
     | 'unsubscribe'
     | 'create_tab'
     | 'close_tab'
+    | 'create_window'
     | 'client_count'
     | 'error';
   payload: any;
@@ -274,6 +275,9 @@ export class RemoteTerminalServer {
         case 'close_tab':
           this.handleCloseTab(message.payload as {uid: string});
           break;
+        case 'create_window':
+          this.handleCreateWindow();
+          break;
         default:
           throw new Error(`Unknown message type: ${message.type}`);
       }
@@ -397,6 +401,10 @@ export class RemoteTerminalServer {
       throw new Error('Session not found');
     }
     this.stateManager.emit('remote_close_tab', {uid});
+  }
+
+  private handleCreateWindow() {
+    this.stateManager.emit('remote_create_window', {});
   }
 
   private async sendSessionHistory(ws: WebSocket, uid: string) {

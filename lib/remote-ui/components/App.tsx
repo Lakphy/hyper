@@ -152,8 +152,18 @@ export function App({token}: AppProps) {
   );
 
   const handleCreateTab = useCallback(() => {
-    send({type: 'create_tab', payload: {windowId: activeWindow?.uid}});
-  }, [send, activeWindow]);
+    if (activeWindow) {
+      send({type: 'create_tab', payload: {windowId: activeWindow.uid}});
+    } else if (state.windows.length > 0) {
+      send({type: 'create_tab', payload: {windowId: state.windows[0].uid}});
+    } else {
+      send({type: 'create_window', payload: {}});
+    }
+  }, [send, activeWindow, state.windows]);
+
+  const handleCreateWindow = useCallback(() => {
+    send({type: 'create_window', payload: {}});
+  }, [send]);
 
   const handleSendKey = useCallback(
     (key: string) => {
@@ -208,12 +218,10 @@ export function App({token}: AppProps) {
 
           {/* Right toolbar area */}
           <div className="header-toolbar">
-            {/* New tab button */}
-            {tabs.length > 0 && (
-              <button className="header-toolbar-btn" title="New Tab" onClick={handleCreateTab}>
-                +
-              </button>
-            )}
+            {/* New tab button - always visible */}
+            <button className="header-toolbar-btn" title="New Tab" onClick={handleCreateTab}>
+              +
+            </button>
 
             {/* Window selector dropdown */}
             {state.windows.length > 1 && (
@@ -285,8 +293,17 @@ export function App({token}: AppProps) {
           </div>
         ) : (
           <div className="no-session">
+            <div className="no-session-icon">&#9638;</div>
             <p>No active terminal sessions</p>
-            <p className="no-session-hint">Open a terminal in Hyper to get started</p>
+            <p className="no-session-hint">All terminals have been closed</p>
+            <div className="no-session-actions">
+              <button className="no-session-btn no-session-btn--primary" onClick={handleCreateTab}>
+                New Tab
+              </button>
+              <button className="no-session-btn" onClick={handleCreateWindow}>
+                New Window
+              </button>
+            </div>
           </div>
         )}
       </div>
