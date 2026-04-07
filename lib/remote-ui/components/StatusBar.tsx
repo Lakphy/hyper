@@ -25,7 +25,7 @@ function getRemoteUrls() {
 
 export function StatusBar() {
   const {state} = useRemoteStore();
-  const {connectionStatus, sessions} = state;
+  const {connectionStatus, sessions, clientCount} = state;
   const [copied, setCopied] = useState<CopiedKey>(null);
 
   const handleCopy = useCallback((url: string, key: CopiedKey) => {
@@ -47,6 +47,11 @@ export function StatusBar() {
         <span className="statusbar-sessions">
           {sessions.length} session{sessions.length !== 1 ? 's' : ''}
         </span>
+        {clientCount > 1 && (
+          <span className="statusbar-clients" title={`${clientCount} WebUI clients connected`}>
+            👥 {clientCount}
+          </span>
+        )}
       </div>
       <div className="statusbar-right">
         <button

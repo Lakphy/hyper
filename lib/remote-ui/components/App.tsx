@@ -1,11 +1,13 @@
 import React, {useRef, useEffect, useCallback, useMemo, useState} from 'react';
 
+import {useViewport} from '../hooks/useViewport';
 import {useWebSocket, sessionDataBus} from '../hooks/useWebSocket';
 import type {SessionDataEvent} from '../hooks/useWebSocket';
 import {useRemoteStore} from '../store/remote-store';
 import type {TerminalSessionInfo, WindowInfo} from '../types';
 import {isTerminalResponse} from '../utils/terminal-response-filter';
 
+import {MobileActionBar} from './MobileActionBar';
 import {RemoteTerminal} from './RemoteTerminal';
 import type {RemoteTerminalHandle} from './RemoteTerminal';
 import {StatusBar} from './StatusBar';
@@ -23,11 +25,24 @@ function getSessionTitle(session: TerminalSessionInfo): string {
 export function App({token}: AppProps) {
   const {state, dispatch} = useRemoteStore();
   const {send} = useWebSocket(token);
+  const viewport = useViewport();
   const termRefs = useRef<Map<string, RemoteTerminalHandle | null>>(new Map());
   const activeUid = state.activeSessionUid;
   const prevVisibleRef = useRef<string[]>([]);
   const [windowDropdownOpen, setWindowDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 通过 CSS 变量驱动容器高度，在键盘弹起时动态调整
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (viewport.keyboardVisible) {
+      el.style.setProperty('--viewport-height', `${viewport.height}px`);
+    } else {
+      el.style.removeProperty('--viewport-height');
+    }
+  }, [viewport.height, viewport.keyboardVisible]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -97,11 +112,11 @@ export function App({token}: AppProps) {
     [send]
   );
 
-  const termSizeRef = useRef<{cols: number; rows: number} | null>(null);
+  const termSizeMapRef = useRef<Map<string, {cols: number; rows: number}>>(new Map());
 
   const handleResize = useCallback(
     (uid: string, cols: number, rows: number) => {
-      termSizeRef.current = {cols, rows};
+      termSizeMapRef.current.set(uid, {cols, rows});
       if (document.hasFocus()) {
         send({type: 'resize', payload: {uid, cols, rows}});
       }
@@ -111,8 +126,11 @@ export function App({token}: AppProps) {
 
   useEffect(() => {
     const onFocus = () => {
-      if (activeUid && termSizeRef.current) {
-        send({type: 'resize', payload: {uid: activeUid, ...termSizeRef.current}});
+      if (activeUid) {
+        const size = termSizeMapRef.current.get(activeUid);
+        if (size) {
+          send({type: 'resize', payload: {uid: activeUid, ...size}});
+        }
       }
     };
     window.addEventListener('focus', onFocus);
@@ -137,12 +155,22 @@ export function App({token}: AppProps) {
     send({type: 'create_tab', payload: {windowId: activeWindow?.uid}});
   }, [send, activeWindow]);
 
+  const handleSendKey = useCallback(
+    (key: string) => {
+      if (activeUid) {
+        send({type: 'input', payload: {uid: activeUid, data: key}});
+      }
+    },
+    [activeUid, send]
+  );
+
   const showTabs = tabs.length > 1;
   const singleTabTitle = tabs.length === 1 && activeSession ? getSessionTitle(activeSession) : null;
   const {historyLoading} = state;
+  const containerClass = `hyper-remote${viewport.keyboardVisible ? ' hyper-remote--keyboard-visible' : ''}`;
 
   return (
-    <div className="hyper-remote">
+    <div className={containerClass} ref={containerRef}>
       {/* Header */}
       <header className="header">
         <nav className="tabs-nav">
@@ -262,6 +290,9 @@ export function App({token}: AppProps) {
           </div>
         )}
       </div>
+
+      {/* 移动端键盘弹起时显示的快捷操作栏 */}
+      {viewport.isMobile && <MobileActionBar onSendKey={handleSendKey} />}
 
       {/* Bottom Status Bar */}
       <StatusBar />

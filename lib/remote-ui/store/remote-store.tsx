@@ -12,6 +12,7 @@ export interface RemoteState {
   historyLoading: Record<string, {received: number; total: number}>;
   collapsedWindows: Record<string, boolean>;
   subscribedUids: string[];
+  clientCount: number;
 }
 
 const initialState: RemoteState = {
@@ -23,11 +24,12 @@ const initialState: RemoteState = {
   layoutMode: 'tabs',
   historyLoading: {},
   collapsedWindows: {},
-  subscribedUids: []
+  subscribedUids: [],
+  clientCount: 1
 };
 
 export type RemoteAction =
-  | {type: 'SET_SNAPSHOT'; payload: {sessions: TerminalSessionInfo[]; windows: WindowInfo[]}}
+  | {type: 'SET_SNAPSHOT'; payload: {sessions: TerminalSessionInfo[]; windows: WindowInfo[]; clientCount?: number}}
   | {type: 'ADD_SESSION'; payload: TerminalSessionInfo}
   | {type: 'REMOVE_SESSION'; payload: {uid: string}}
   | {type: 'SET_ACTIVE_SESSION'; payload: string | null}
@@ -38,17 +40,18 @@ export type RemoteAction =
   | {type: 'HISTORY_COMPLETE'; payload: {uid: string}}
   | {type: 'TOGGLE_WINDOW_COLLAPSED'; payload: string}
   | {type: 'SET_SUBSCRIBED_UIDS'; payload: string[]}
-  | {type: 'UPDATE_SESSION'; payload: {uid: string; changes: Partial<TerminalSessionInfo>}};
+  | {type: 'UPDATE_SESSION'; payload: {uid: string; changes: Partial<TerminalSessionInfo>}}
+  | {type: 'SET_CLIENT_COUNT'; payload: number};
 
 export function remoteReducer(state: RemoteState, action: RemoteAction): RemoteState {
   switch (action.type) {
     case 'SET_SNAPSHOT': {
-      const {sessions, windows} = action.payload;
+      const {sessions, windows, clientCount} = action.payload;
       const activeSessionUid =
         state.activeSessionUid && sessions.some((s) => s.uid === state.activeSessionUid)
           ? state.activeSessionUid
           : sessions[0]?.uid ?? null;
-      return {...state, sessions, windows, activeSessionUid};
+      return {...state, sessions, windows, activeSessionUid, clientCount: clientCount ?? state.clientCount};
     }
     case 'ADD_SESSION': {
       const session = action.payload;
@@ -118,6 +121,8 @@ export function remoteReducer(state: RemoteState, action: RemoteAction): RemoteS
       const sessions = state.sessions.map((s) => (s.uid === uid ? {...s, ...changes} : s));
       return {...state, sessions};
     }
+    case 'SET_CLIENT_COUNT':
+      return {...state, clientCount: action.payload};
     default:
       return state;
   }

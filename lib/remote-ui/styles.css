@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -14,6 +15,7 @@ body,
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
+  overscroll-behavior: none;
 }
 
 /* ===== Main Container ===== */
@@ -22,11 +24,17 @@ body,
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* 默认使用 100% 高度，JS 会在键盘弹起时通过 CSS 变量覆盖 */
+  height: var(--viewport-height, 100%);
   border: 1px solid #333;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* iOS safe area */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  transition: height 0.1s ease-out;
 }
 
 /* ===== Header / Tab Bar ===== */
@@ -34,6 +42,7 @@ body,
   position: relative;
   z-index: 100;
   flex-shrink: 0;
+  touch-action: manipulation;
 }
 
 .tabs-nav {
@@ -68,7 +77,14 @@ body,
   flex-flow: row;
   flex-grow: 1;
   list-style: none;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabs-list::-webkit-scrollbar {
+  display: none;
 }
 
 /* ===== Individual Tab ===== */
@@ -339,8 +355,10 @@ body,
   background: black;
   border-top: 1px solid #333;
   padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom);
   flex-shrink: 0;
   z-index: 100;
+  touch-action: manipulation;
 }
 
 .statusbar-left {
@@ -383,6 +401,12 @@ body,
 .statusbar-sessions {
   font-size: 11px;
   color: #666;
+  white-space: nowrap;
+}
+
+.statusbar-clients {
+  font-size: 11px;
+  color: #c7c329;
   white-space: nowrap;
 }
 
@@ -441,4 +465,289 @@ body,
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* ==========================================================================
+   Terminal touch scrolling & iOS input
+   ========================================================================== */
+.xterm .xterm-viewport {
+  /* 确保 xterm 滚动区域允许触摸纵向滚动 */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.remote-terminal {
+  touch-action: pan-y;
+}
+
+/* ==========================================================================
+   Mobile Portrait Optimizations
+   ========================================================================== */
+
+@media (max-width: 600px) {
+  /* --- Header / Tabs --- */
+  .tabs-nav {
+    height: 40px;
+    line-height: 40px;
+    font-size: 13px;
+  }
+
+  .tabs-title {
+    padding: 0 48px;
+    font-size: 14px;
+  }
+
+  .tabs-list {
+    max-height: 40px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .tab-text {
+    height: 40px;
+  }
+
+  .tab-text-inner {
+    left: 10px;
+    right: 10px;
+    font-size: 13px;
+  }
+
+  /* 移动端始终显示关闭按钮，因为没有 hover */
+  .tab-icon {
+    opacity: 0.6;
+    transform: none;
+    pointer-events: all;
+    width: 20px;
+    height: 20px;
+    top: 10px;
+    right: 4px;
+    font-size: 11px;
+  }
+
+  .tab-icon:active {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* --- Toolbar Buttons --- */
+  .header-toolbar-btn {
+    height: 40px;
+    padding: 0 14px;
+    font-size: 18px;
+    min-width: 40px;
+  }
+
+  /* --- Window Dropdown --- */
+  .window-dropdown {
+    top: 40px;
+    min-width: 240px;
+    max-height: 60vh;
+  }
+
+  .window-dropdown-header {
+    padding: 10px 14px 6px;
+    font-size: 11px;
+  }
+
+  .window-dropdown-item {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+
+  /* --- Status Bar --- */
+  .statusbar {
+    height: auto;
+    min-height: 28px;
+    padding: 4px 8px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  }
+
+  .statusbar-connection {
+    font-size: 12px;
+  }
+
+  .statusbar-sessions {
+    font-size: 12px;
+  }
+
+  .statusbar-btn {
+    height: 24px;
+    padding: 0 10px;
+    font-size: 12px;
+    min-width: 44px;
+  }
+
+  /* --- No Session Placeholder --- */
+  .no-session {
+    font-size: 15px;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .no-session-hint {
+    font-size: 12px;
+  }
+
+  /* --- History Loading --- */
+  .history-loading {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}
+
+/* --- 窄屏进一步缩小 UI 元素 (iPhone SE / 小屏手机) --- */
+@media (max-width: 380px) {
+  .tabs-nav {
+    height: 36px;
+    line-height: 36px;
+    font-size: 12px;
+  }
+
+  .tabs-title {
+    padding: 0 36px;
+    font-size: 12px;
+  }
+
+  .tabs-list {
+    max-height: 36px;
+  }
+
+  .tab {
+    min-width: 64px;
+  }
+
+  .tab-text {
+    height: 36px;
+  }
+
+  .tab-text-inner {
+    left: 6px;
+    right: 6px;
+    font-size: 11px;
+  }
+
+  .tab-icon {
+    width: 18px;
+    height: 18px;
+    top: 9px;
+    right: 2px;
+    font-size: 10px;
+  }
+
+  .header-toolbar-btn {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 16px;
+    min-width: 36px;
+  }
+
+  .statusbar {
+    min-height: 24px;
+    padding: 2px 6px;
+    padding-bottom: calc(2px + env(safe-area-inset-bottom));
+  }
+
+  .statusbar-connection {
+    font-size: 10px;
+  }
+
+  .statusbar-sessions {
+    font-size: 10px;
+  }
+
+  .statusbar-btn {
+    height: 20px;
+    padding: 0 6px;
+    font-size: 10px;
+    min-width: 36px;
+  }
+
+  .mobile-action-btn {
+    height: 24px;
+    min-width: 30px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+}
+
+/* === 键盘弹起时的优化 === */
+.hyper-remote--keyboard-visible .statusbar {
+  /* 键盘弹起时隐藏底部状态栏，最大化终端面积 */
+  display: none;
+}
+
+.hyper-remote--keyboard-visible {
+  /* 键盘弹起时去掉 safe area 底部留白 */
+  padding-bottom: 0;
+}
+
+/* === Mobile Quick Action Bar (键盘上方快捷操作栏) === */
+.mobile-action-bar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .mobile-action-bar {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    background: #111;
+    border-top: 1px solid #333;
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    gap: 2px;
+    padding: 0 4px;
+  }
+
+  .mobile-action-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-action-btn {
+    flex-shrink: 0;
+    height: 28px;
+    min-width: 36px;
+    padding: 0 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background: #1a1a1a;
+    color: #ccc;
+    font-size: 13px;
+    font-family: Menlo, "DejaVu Sans Mono", Consolas, monospace;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.1s ease;
+    user-select: none;
+  }
+
+  .mobile-action-btn:active {
+    background: #333;
+    color: #fff;
+  }
+
+  .mobile-action-btn--special {
+    color: #f81ce5;
+    border-color: rgba(248, 28, 229, 0.3);
+  }
+
+  .mobile-action-btn--special:active {
+    background: rgba(248, 28, 229, 0.15);
+  }
+
+  /* 键盘未弹起时隐藏快捷栏 */
+  .hyper-remote:not(.hyper-remote--keyboard-visible) .mobile-action-bar {
+    display: none;
+  }
 }

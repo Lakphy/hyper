@@ -15,6 +15,7 @@ function makeState(overrides: Partial<RemoteState> = {}): RemoteState {
     historyLoading: {},
     collapsedWindows: {},
     subscribedUids: [],
+    clientCount: 1,
     ...overrides
   };
 }

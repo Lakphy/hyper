@@ -29,6 +29,7 @@ interface WSMessage {
     | 'unsubscribe'
     | 'create_tab'
     | 'close_tab'
+    | 'client_count'
     | 'error';
   payload: any;
 }
@@ -61,6 +62,8 @@ export class RemoteTerminalServer {
   private port: number;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private clientAlive = new Map<string, boolean>();
+  private resizeTimers = new Map<string, NodeJS.Timeout>();
+  private pendingResizes = new Map<string, {cols: number; rows: number}>();
 
   constructor(port: number = 3030, config: RemoteConfig = {}) {
     this.port = port;
@@ -179,6 +182,9 @@ export class RemoteTerminalServer {
       // Send initial snapshot
       this.sendSnapshot(ws);
 
+      // Notify all clients about the new connection count
+      this.broadcastClientCount();
+
       // Handle heartbeat pong
       ws.on('pong', () => {
         this.clientAlive.set(clientId, true);
@@ -199,6 +205,7 @@ export class RemoteTerminalServer {
           clientBatcher.destroy();
           this.batchers.delete(clientId);
         }
+        this.broadcastClientCount();
       });
 
       ws.on('error', (err) => {
@@ -229,9 +236,14 @@ export class RemoteTerminalServer {
   private sendSnapshot(ws: WebSocket) {
     const snapshot = {
       sessions: this.stateManager.getAllSessions(),
-      windows: this.stateManager.getAllWindows()
+      windows: this.stateManager.getAllWindows(),
+      clientCount: this.clients.size
     };
     ws.send(JSON.stringify({type: 'snapshot', payload: snapshot}));
+  }
+
+  private broadcastClientCount() {
+    this.broadcast({type: 'client_count', payload: {count: this.clients.size}});
   }
 
   private handleClientMessage(clientId: string, ws: WebSocket, data: Buffer) {
@@ -275,10 +287,20 @@ export class RemoteTerminalServer {
     const {uids} = payload;
     this.subscriptionManager.subscribe(clientId, uids);
 
-    // Send history for newly subscribed sessions
+    // Send history and current size for newly subscribed sessions
     const ws = this.clients.get(clientId);
     if (ws) {
       for (const uid of uids) {
+        // Inform the client of the current terminal size so it can adapt
+        const session = this.stateManager.getSession(uid);
+        if (session && session.cols && session.rows) {
+          ws.send(
+            JSON.stringify({
+              type: 'session_updated',
+              payload: {uid, changes: {cols: session.cols, rows: session.rows}}
+            })
+          );
+        }
         void this.sendSessionHistory(ws, uid);
       }
     }
@@ -327,8 +349,26 @@ export class RemoteTerminalServer {
       throw new Error('Session not found');
     }
 
-    // Emit event that will be handled by the session in window.ts
-    this.stateManager.emit('remote_resize', {uid, cols, rows});
+    // Skip if the size hasn't actually changed
+    if (session.cols === cols && session.rows === rows) {
+      return;
+    }
+
+    // Debounce resize per session to prevent thrashing from multiple clients
+    this.pendingResizes.set(uid, {cols, rows});
+    const existing = this.resizeTimers.get(uid);
+    if (existing) clearTimeout(existing);
+    this.resizeTimers.set(
+      uid,
+      setTimeout(() => {
+        const size = this.pendingResizes.get(uid);
+        if (size) {
+          this.stateManager.emit('remote_resize', {uid, ...size});
+          this.pendingResizes.delete(uid);
+        }
+        this.resizeTimers.delete(uid);
+      }, 300)
+    );
   }
 
   private handleCreateTab(payload: {windowId?: string}) {
@@ -474,5 +514,10 @@ export class RemoteTerminalServer {
     }
     this.batchers.clear();
     this.clients.clear();
+    for (const timer of this.resizeTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.resizeTimers.clear();
+    this.pendingResizes.clear();
   }
 }

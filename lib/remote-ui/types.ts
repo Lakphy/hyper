@@ -23,11 +23,12 @@ export interface WindowInfo {
 
 // Messages sent by the server
 export type WSServerMessage =
-  | {type: 'snapshot'; payload: {sessions: TerminalSessionInfo[]; windows: WindowInfo[]}}
+  | {type: 'snapshot'; payload: {sessions: TerminalSessionInfo[]; windows: WindowInfo[]; clientCount?: number}}
   | {type: 'session_added'; payload: TerminalSessionInfo}
   | {type: 'session_removed'; payload: {uid: string}}
   | {type: 'session_updated'; payload: {uid: string; changes: Partial<TerminalSessionInfo>}}
   | {type: 'session_history'; payload: {uid: string; data: string; chunk: number; total: number}}
+  | {type: 'client_count'; payload: {count: number}}
   | {type: 'error'; payload: {message: string}};
 
 // Messages sent by the client

@@ -270,37 +270,59 @@ export function newWindow(
   // Deferred setup: stateManager is assigned after newWindow returns,
   // so we set up listeners once it becomes available.
   let remoteListenersAttached = false;
+  const remoteListenerRemovers: Array<() => void> = [];
   const setupRemoteListeners = () => {
     if (remoteListenersAttached) return;
     const sm = getStateManager();
     if (!sm) return;
     remoteListenersAttached = true;
-    sm.on('remote_input', ({uid, data}: {uid: string; data: string}) => {
+
+    const onRemoteInput = ({uid, data}: {uid: string; data: string}) => {
       const session = sessions.get(uid);
       if (session) {
         session.write(data);
       }
-    });
+    };
 
-    sm.on('remote_resize', ({uid, cols, rows}: {uid: string; cols: number; rows: number}) => {
+    const onRemoteResize = ({uid, cols, rows}: {uid: string; cols: number; rows: number}) => {
       const session = sessions.get(uid);
       if (session) {
         session.resize({cols, rows});
         sm.updateSession(uid, {cols, rows});
       }
-    });
+    };
 
-    sm.on('remote_create_tab', ({windowId}: {windowId: string | null}) => {
+    const onRemoteCreateTab = ({windowId}: {windowId: string | null}) => {
       if (windowId && windowId !== window.uid) return;
+      // When windowId is null, only the most recently focused window should create the tab
+      if (!windowId) {
+        const allWindows = BrowserWindow.getAllWindows();
+        const mostRecent = allWindows.reduce((best, w) => {
+          return (w.focusTime ?? 0) > (best.focusTime ?? 0) ? w : best;
+        }, allWindows[0]);
+        if (mostRecent && mostRecent.uid !== window.uid) return;
+      }
       rpc.emit('termgroup add req', {});
-    });
+    };
 
-    sm.on('remote_close_tab', ({uid}: {uid: string}) => {
+    const onRemoteCloseTab = ({uid}: {uid: string}) => {
       const session = sessions.get(uid);
       if (session) {
         session.exit();
       }
-    });
+    };
+
+    sm.on('remote_input', onRemoteInput);
+    sm.on('remote_resize', onRemoteResize);
+    sm.on('remote_create_tab', onRemoteCreateTab);
+    sm.on('remote_close_tab', onRemoteCloseTab);
+
+    remoteListenerRemovers.push(
+      () => sm.off('remote_input', onRemoteInput),
+      () => sm.off('remote_resize', onRemoteResize),
+      () => sm.off('remote_create_tab', onRemoteCreateTab),
+      () => sm.off('remote_close_tab', onRemoteCloseTab)
+    );
   };
   // Try immediately, then retry after a short delay to catch the deferred assignment
   setupRemoteListeners();
@@ -466,6 +488,11 @@ export function newWindow(
     deleteSessions();
     cfgUnsubscribe();
     pluginsUnsubscribe();
+    // Clean up remote stateManager listeners to prevent memory leaks
+    for (const remove of remoteListenerRemovers) {
+      remove();
+    }
+    remoteListenerRemovers.length = 0;
   };
   // Ensure focusTime is set on window open. The focus event doesn't
   // fire from the dock (see bug #583)

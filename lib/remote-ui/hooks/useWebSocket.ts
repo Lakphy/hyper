@@ -116,6 +116,9 @@ export function useWebSocket(token: string) {
                 dispatch({type: 'HISTORY_COMPLETE', payload: {uid: message.payload.uid}});
               }
               break;
+            case 'client_count':
+              dispatch({type: 'SET_CLIENT_COUNT', payload: message.payload.count});
+              break;
             case 'error':
               dispatch({type: 'SET_ERROR', payload: message.payload.message});
               break;
