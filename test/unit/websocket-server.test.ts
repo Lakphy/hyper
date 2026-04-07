@@ -22,11 +22,17 @@ function waitForOpen(ws: WebSocket): Promise<void> {
   });
 }
 
-function waitForMessage(ws: WebSocket): Promise<any> {
+function waitForMessage(ws: WebSocket, skipTypes?: string[]): Promise<any> {
   return new Promise((resolve) => {
-    ws.once('message', (data: Buffer) => {
-      resolve(JSON.parse(data.toString()));
-    });
+    const handler = (data: Buffer) => {
+      const msg = JSON.parse(data.toString());
+      if (skipTypes && skipTypes.includes(msg.type)) {
+        ws.once('message', handler);
+        return;
+      }
+      resolve(msg);
+    };
+    ws.once('message', handler);
   });
 }
 
@@ -209,7 +215,7 @@ test.serial('session_added is broadcast to connected clients', async (t) => {
     createdAt: Date.now()
   });
 
-  const msg = await waitForMessage(ws);
+  const msg = await waitForMessage(ws, ['client_count']);
   t.is(msg.type, 'session_added');
   t.is(msg.payload.uid, 'new-session');
 
@@ -241,7 +247,7 @@ test.serial('session_removed is broadcast to connected clients', async (t) => {
 
   sm.unregisterSession('rm-session');
 
-  const msg = await waitForMessage(ws);
+  const msg = await waitForMessage(ws, ['client_count']);
   t.is(msg.type, 'session_removed');
   t.is(msg.payload.uid, 'rm-session');
 
@@ -278,7 +284,7 @@ test.serial('subscribe triggers history and data forwarding', async (t) => {
   ws.send(JSON.stringify({type: 'subscribe', payload: {uids: ['data-session']}}));
 
   // Should receive history
-  const historyMsg = await waitForMessage(ws);
+  const historyMsg = await waitForMessage(ws, ['client_count']);
   t.is(historyMsg.type, 'session_history');
   t.is(historyMsg.payload.uid, 'data-session');
   t.is(historyMsg.payload.data, 'hello world');
@@ -357,7 +363,7 @@ test.serial('input message rejected when allowInput is false', async (t) => {
 
   ws.send(JSON.stringify({type: 'input', payload: {uid: 'no-input-session', data: 'ls\n'}}));
 
-  const errMsg = (await waitForMessage(ws)) as {type: string; payload: {message: string}};
+  const errMsg = (await waitForMessage(ws, ['client_count'])) as {type: string; payload: {message: string}};
   t.is(errMsg.type, 'error');
   t.truthy(errMsg.payload.message.includes('disabled'));
 
@@ -378,7 +384,7 @@ test.serial('invalid message returns error', async (t) => {
 
   ws.send(JSON.stringify({type: 'bogus_type', payload: {}}));
 
-  const errMsg = await waitForMessage(ws);
+  const errMsg = await waitForMessage(ws, ['client_count']);
   t.is(errMsg.type, 'error');
 
   ws.close();
@@ -413,7 +419,7 @@ test.serial('session_updated is broadcast when updateSession is called', async (
 
   sm.updateSession('update-session', {cols: 120, rows: 40});
 
-  const msg = await waitForMessage(ws);
+  const msg = await waitForMessage(ws, ['client_count']);
   t.is(msg.type, 'session_updated');
   t.is(msg.payload.uid, 'update-session');
   t.is(msg.payload.changes.cols, 120);
