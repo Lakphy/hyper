@@ -81,7 +81,7 @@
       },
       "features": {
         "allowInput": true,
-        "allowResize": false
+        "allowResize": true
       }
     }
   },

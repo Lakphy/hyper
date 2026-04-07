@@ -956,7 +956,7 @@ export interface configOptions {
     };
     features?: {
       allowInput?: boolean;    // 默认 true，允许远程输入
-      allowResize?: boolean;   // 默认 false，允许远程调整大小
+      allowResize?: boolean;   // 默认 true，聚焦时自动调整大小
     };
   };
 }
@@ -979,7 +979,7 @@ export const defaults: configOptions = {
     },
     features: {
       allowInput: true,
-      allowResize: false
+      allowResize: true
     }
   }
 };

@@ -738,7 +738,7 @@
                                             "type": "boolean"
                                         },
                                         "allowResize": {
-                                            "description": "Allow remote resize of terminals (default: false)",
+                                            "description": "Allow remote resize of terminals (default: true)",
                                             "type": "boolean"
                                         }
                                     },

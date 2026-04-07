@@ -68,8 +68,8 @@ export class RemoteTerminalServer {
       enabled: true,
       host: '0.0.0.0',
       auth: {type: 'token', token: 'auto'},
-      features: {allowInput: true, allowResize: false},
-      ...config
+      ...config,
+      features: {allowInput: true, allowResize: true, ...config.features}
     };
 
     // Generate auth token

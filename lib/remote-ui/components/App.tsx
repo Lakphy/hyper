@@ -97,12 +97,27 @@ export function App({token}: AppProps) {
     [send]
   );
 
+  const termSizeRef = useRef<{cols: number; rows: number} | null>(null);
+
   const handleResize = useCallback(
     (uid: string, cols: number, rows: number) => {
-      send({type: 'resize', payload: {uid, cols, rows}});
+      termSizeRef.current = {cols, rows};
+      if (document.hasFocus()) {
+        send({type: 'resize', payload: {uid, cols, rows}});
+      }
     },
     [send]
   );
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (activeUid && termSizeRef.current) {
+        send({type: 'resize', payload: {uid: activeUid, ...termSizeRef.current}});
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [activeUid, send]);
 
   const handleTabSelect = useCallback(
     (uid: string) => {

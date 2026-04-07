@@ -315,6 +315,7 @@ export default class Term extends React.PureComponent<
     window.addEventListener('paste', this.onWindowPaste, {
       capture: true
     });
+    window.addEventListener('focus', this.onWindowFocus);
 
     platform.registerTerm(this.props.uid, this);
   }
@@ -340,6 +341,12 @@ export default class Term extends React.PureComponent<
       e.preventDefault();
       e.stopPropagation();
       this.term.paste(processed);
+    }
+  };
+
+  onWindowFocus = () => {
+    if (this.props.isTermActive && this.props.onResize) {
+      this.props.onResize(this.term.cols, this.term.rows);
     }
   };
 
@@ -504,6 +511,7 @@ export default class Term extends React.PureComponent<
     window.removeEventListener('paste', this.onWindowPaste, {
       capture: true
     });
+    window.removeEventListener('focus', this.onWindowFocus);
   }
 
   render() {

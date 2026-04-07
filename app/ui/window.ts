@@ -286,6 +286,7 @@ export function newWindow(
       const session = sessions.get(uid);
       if (session) {
         session.resize({cols, rows});
+        sm.updateSession(uid, {cols, rows});
       }
     });
 
