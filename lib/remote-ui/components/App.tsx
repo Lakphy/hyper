@@ -4,6 +4,7 @@ import {useWebSocket, sessionDataBus} from '../hooks/useWebSocket';
 import type {SessionDataEvent} from '../hooks/useWebSocket';
 import {useRemoteStore} from '../store/remote-store';
 import type {WindowInfo} from '../types';
+import {isTerminalResponse} from '../utils/terminal-response-filter';
 
 import {RemoteTerminal} from './RemoteTerminal';
 import type {RemoteTerminalHandle} from './RemoteTerminal';
@@ -89,6 +90,7 @@ export function App({token}: AppProps) {
 
   const handleData = useCallback(
     (uid: string, data: string) => {
+      if (isTerminalResponse(data)) return;
       send({type: 'input', payload: {uid, data}});
     },
     [send]
